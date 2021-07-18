@@ -39,7 +39,7 @@ sqlFile.split('\n').forEach((line) => {
     tblName = elems[2].split('.')[1];
     return;
   }
-  if (['(', ')'].indexOf(elems[0].toUpperCase()) >= 0) {
+  if (['(', ')'].indexOf(elems[0].substr(0,1)) >= 0) {
     return;
   }
   if (elems[0] === '') {

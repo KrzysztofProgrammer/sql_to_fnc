@@ -6,6 +6,7 @@
   "private": true,
   "license": "gpl-3.0",
   "scripts": {
+    "win": "ts-node-script .\\sql_to_fnc.ts .\\table.example.sql"
   },
   "dependencies": {
     "eslint-config-airbnb-typescript": "^12.3.1",

@@ -93,10 +93,13 @@ export function generateSQL(
   // LIST
   const listFncName = `${schemaName}.${tblName}_list`;
   const sqlList = `
-    CREATE OR  REPLACE FUNCTION ${listFncName}(a_filter: character varying)
+    CREATE OR  REPLACE FUNCTION ${listFncName}(a_filter character varying)
       RETURNS TEXT AS
     $BODY$
+    DECLARE
+      f_filter jsonb;
     BEGIN
+      f_filter = CAST(a_filter as jsonb);
       RETURN COALESCE(to_jsonb(array_agg( u )),'[]'::jsonb) FROM (
         SELECT
     ${getFunctionList(fieldArray)}
