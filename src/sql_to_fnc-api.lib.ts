@@ -95,6 +95,7 @@ export class ${capitalize(tblName)}Controller {
   @HttpCode(200)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: 200, description: 'Response with list' })
   list(@Body() filter: ${capitalize(tblName)}FilterDto) {
     return this.${tblName}Service.list(filter);
@@ -104,6 +105,7 @@ export class ${capitalize(tblName)}Controller {
   @HttpCode(200)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: 200, description: 'Response description', type: ${capitalize(tblName)}Dto })
   get(@Param('id') id: number) {
     return this.${tblName}Service.get(id);
@@ -113,6 +115,7 @@ export class ${capitalize(tblName)}Controller {
   @HttpCode(200)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: 200, description: 'Response with id' })
   add(@Body() ${tblName}: ${capitalize(tblName)}Dto) {
     return this.${tblName}Service.save(${tblName});
@@ -122,6 +125,7 @@ export class ${capitalize(tblName)}Controller {
   @HttpCode(200)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: 200, description: 'Deleted' })
   delete(@Param('id') id: number) {
     return this.${tblName}Service.delete(id);
