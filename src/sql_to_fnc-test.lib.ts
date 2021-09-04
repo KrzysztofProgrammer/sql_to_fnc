@@ -41,6 +41,7 @@ import { AppModule } from '../src/app.module';
 describe('${capitalize(tblName)}', () => {
   let app: INestApplication;
   let jwtToken: string;
+  let itemFromList: any; // first item from list
   let newId: number; // create, then delete
   const ${tblName}Item : ${capitalize(tblName)}Dto = {\n`;
   fieldArray.forEach((item) => {
@@ -70,17 +71,26 @@ testTs += `\n};
       (done) => request(app.getHttpServer())
         .post('/${tblName}/list')
         .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer '+jwtToken)
+        .set('Authorization', \`Bearer \${jwtToken}\`)
         .send({})
-        .expect('Content-TYpe', /json/)
+        .expect('Content-Type', /json/)
         .expect(200)
-        .end(done));
+        .end((err, res) => {
+          // expect(res.body).toHaveLength(1);
+          // eslint-disable-next-line prefer-destructuring
+          itemFromList = res.body[0];
+          if (err) {
+            return done(err);
+          }
+          return done();
+        }));
 
-    it('/${tblName}/0 GET description',
+    it('/${tblName}/number GET first item description',
       (done) => request(app.getHttpServer())
-        .get('/${tblName}')
+        .get('/${tblName}/\${itemFromList.${fieldArray[0].field}}')
+        .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(200)
-        .expect('Content-TYpe', /json/)
+        .expect('Content-Type', /json/)
         .expect({})
         .end(done));
 
@@ -88,9 +98,9 @@ testTs += `\n};
       (done) => request(app.getHttpServer())
         .post('/${tblName}')
         .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer '+jwtToken)
+        .set('Authorization', \`Bearer \${jwtToken}\`)
         .send({})
-        .expect('Content-TYpe', /json/)
+        .expect('Content-Type', /json/)
         .expect(200)
         .end(done));
 
@@ -98,9 +108,9 @@ testTs += `\n};
       (done) => request(app.getHttpServer())
         .delete('/${tblName}/0')
         .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer '+jwtToken)
+        .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(404)
-        .expect('Content-TYpe', /json/)
+        .expect('Content-Type', /json/)
         .end(done));
   });
 });
