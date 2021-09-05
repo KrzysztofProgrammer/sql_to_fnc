@@ -4,6 +4,7 @@ import { generateSQL } from './src/sql_to_fnc-sql.lib';
 import { generateAPI } from './src/sql_to_fnc-api.lib';
 import { FieldDefinition } from './src/sql_to_fnc.interfaces';
 import {generateTestE2E} from "./src/sql_to_fnc-test.lib";
+import {generateAngularModule} from "./src/sql_to_fnc-www.lib";
 
 const args = process.argv.slice(2);
 if (!args[0]) {
@@ -69,7 +70,8 @@ if (!schemaName) {
 
 generateSQL(schemaName, tblName, sequenceName, fieldArray);
 
-// console.log(getFncName);
 generateAPI(schemaName, tblName, fieldArray);
 
 generateTestE2E(schemaName, tblName, fieldArray);
+
+generateAngularModule(schemaName, tblName, fieldArray);

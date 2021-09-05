@@ -66,7 +66,42 @@ export class ${dtoName} {\n`;
   let tsFilterDto = `import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
-export class ${filterDtoName} {\n`;
+export class ${filterDtoName} {\n
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    description: 'Search field ${fieldArray[1].field}',
+    type: 'string',
+    example: '%',
+  })
+  ${fieldArray[1].field}: string;
+
+  @IsString()
+  @ApiProperty({
+    description: 'Sort direction',
+    type: 'string',
+    enum: ['asc', 'desc', ''],
+    example: 'asc',
+  })
+  sort_direction:string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({
+    description: 'Page index',
+    type: 'number',
+    example: '1',
+  })
+  page_index: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({
+    description: 'Page size',
+    type: 'number',
+    example: 25,
+  })
+  page_size: number;\n`;
   tsFilterDto += '}';
   fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}Filter.dto.ts`), tsFilterDto);
 

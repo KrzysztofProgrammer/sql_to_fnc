@@ -1,2 +1,2 @@
-export const privUser = 'user_group';
-export const privOwner = 'user_group';
+export const privUser = 'lac_api';
+export const privOwner = 'lac_group';
