@@ -103,14 +103,33 @@ CREATE OR  REPLACE FUNCTION ${listFncName}(a_filter character varying)
   RETURNS TEXT AS
 $BODY$
 DECLARE
-  f_filter jsonb;
+  f_filter   jsonb;
+  f_p_size   integer;
+  f_p_offset integer;
+  f_order    varchar;
+  f_sql      varchar;
+  f_result   jsonb;
+  f_cnt      integer;
 BEGIN
   f_filter = CAST(a_filter as jsonb);
-  RETURN COALESCE(to_jsonb(array_agg( u )),'[]'::jsonb) FROM (
+  f_p_size = (f_filter->>'page_size')::integer;
+  f_p_offset = (f_filter->>'page_index')::integer * f_p_size;
+  f_order = f_filter->>'sort_direction';
+  IF (NOT ((f_order='asc') OR (f_order='desc') OR (f_order=''))) THEN
+    RETURN jsonb_build_object('error','Wrong order', 'code', '400');
+  END IF;
+   f_sql = format('SELECT COALESCE(to_jsonb(array_agg( u )),'[]'::jsonb) FROM (
     SELECT
 ${getFunctionList(fieldArray)}
     FROM ${schemaName}.${tblName}
-  ) as u;
+    WHERE ${fieldArray[1].field} LIKE %1
+    ORDER BY ${fieldArray[1].field} %s
+    LIMIT $2
+    OFFSET $3
+  ) as u', f_order);
+  EXECUTE f_sql INTO f_result USING f_filter->>'${fieldArray[1].field}', f_p_size, f_p_offset;
+  SELECT count(*) FROM ${schemaName}.${tblName} INTO f_cnt;
+  RETURN jsonb_build_object('data', f_result, 'cnt', f_cnt);
 END;
 $BODY$
   LANGUAGE plpgsql VOLATILE

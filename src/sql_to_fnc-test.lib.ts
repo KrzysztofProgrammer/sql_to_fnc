@@ -32,23 +32,22 @@ export function generateTestE2E(
   if (!fs.existsSync(path.join('dist', 'tests'))) {
     fs.mkdirSync(path.join('dist', 'tests'), {recursive: true});
   }
+  if (!fs.existsSync(path.join('dist', 'tests', 'data'))) {
+    fs.mkdirSync(path.join('dist', 'tests', 'data'), {recursive: true});
+  }
 
   let testTs = `import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
+import { ${tblName}Filter, ${tblName}ValidItem, ${tblName}WrongItem } from './data/${capitalize(tblName)}.data';
+
 
 describe('${capitalize(tblName)}', () => {
   let app: INestApplication;
   let jwtToken: string;
   let itemFromList: any; // first item from list
   let newId: number; // create, then delete
-  const ${tblName}Item : ${capitalize(tblName)}Dto = {\n`;
-  fieldArray.forEach((item) => {
-    testTs += `     ${item.field}: ${testData(item)},\n`;
-  });
-  testTs = testTs.slice(0, -2);
-testTs += `\n};
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -63,7 +62,21 @@ testTs += `\n};
   afterAll(async () => {
     await app.close();
   });
-  // TODO: Authorization jwtoken inquire, add more tests for invalid inputs, save and update
+
+  beforeEach(async (done) => {
+    if (jwtToken) {
+      done();
+      return;
+    }
+    // TODO: Authorization jwtoken inquire
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send(validLogin)
+      .expect(200);
+    jwtToken = response.body.access_token;
+    expect(jwtToken).toMatch(/^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$/); // jwt regex
+    done();
+  });
 
   describe('${capitalize(tblName)} service', () => {
 
@@ -72,7 +85,7 @@ testTs += `\n};
         .post('/${tblName}/list')
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send({})
+        .send(${tblName}Filter)
         .expect('Content-Type', /json/)
         .expect(200)
         .end((err, res) => {
@@ -87,11 +100,10 @@ testTs += `\n};
 
     it('/${tblName}/number GET first item description',
       (done) => request(app.getHttpServer())
-        .get('/${tblName}/\${itemFromList.${fieldArray[0].field}}')
+        .get(\`/${tblName}/\${itemFromList.${fieldArray[0].field}}\`)
         .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(200)
         .expect('Content-Type', /json/)
-        .expect({})
         .end(done));
 
     it('/${tblName} POST - save / update item',
@@ -99,10 +111,20 @@ testTs += `\n};
         .post('/${tblName}')
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send({})
+        .send(${tblName}ValidItem)
         .expect('Content-Type', /json/)
         .expect(200)
-        .end(done));
+        .end((err, res) => {
+          // console.log(res.body);
+          expect(res.body).toBeDefined();
+          expect(res.body.id).toBeDefined();
+          // eslint-disable-next-line prefer-destructuring
+          newId = res.body.id;
+          if (err) {
+            return done(err);
+          }
+          return done();
+        }));
 
     it('/${tblName}/0 DELETE Wrong params',
       (done) => request(app.getHttpServer())
@@ -112,8 +134,47 @@ testTs += `\n};
         .expect(404)
         .expect('Content-Type', /json/)
         .end(done));
+   
+    it('/${tblName}/number DELETE',
+      (done) => request(app.getHttpServer())
+        .delete(\`/${tblName}/\${newId}\`)
+        .set('Accept', 'application/json')
+        .set('Authorization', \`Bearer \${jwtToken}\`)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .end(done));
+
+     // TODO: Add more tests for invalid inputs, save and update
   });
 });
   `;
   fs.writeFileSync(path.join('dist','tests',`${tblName}.e2e-spec.ts`), testTs);
+
+
+  /**
+   * Test data
+   */
+  let testDataTs = `export const ${tblName}ValidItem: ${capitalize(tblName)}Dto = {\n`;
+fieldArray.forEach((item) => {
+  testDataTs += `     ${item.field}: ${testData(item)},\n`;
+});
+  testDataTs = testDataTs.slice(0, -2);
+testDataTs += '\n};\n'
+
+testDataTs += `export const ${tblName}WrongItem : ${capitalize(tblName)}Dto = {\n`;
+  fieldArray.forEach((item) => {
+    testDataTs += `     ${item.field}: ${testData(item)},\n`;
+  });
+  testDataTs = testDataTs.slice(0, -2);
+  testDataTs += '\n};\n'
+
+  testDataTs +=`export const ${tblName}Filter: ${capitalize(tblName)}FilterDto = {
+  ${fieldArray[1].field}: '%',
+  page_index: 1,
+  sort_direction: 'asc',
+  page_size: 25
+}`;
+
+
+  fs.writeFileSync(path.join('dist','tests','data',`${tblName}.data.ts`), testDataTs);
 }

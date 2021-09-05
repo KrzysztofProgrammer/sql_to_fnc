@@ -71,13 +71,41 @@ export class ${filterDtoName} {\n`;
   fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}Filter.dto.ts`), tsFilterDto);
 
   /**
+   * List Response Dto
+   */
+  let tsListResponseDto = `import { IsNumber } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { ${capitalize(tblName)}Dto } from './${capitalize(tblName)}.dto';
+
+export class ${capitalize(tblName)}ListResponseDto {
+  @IsNumber()
+  @ApiProperty({
+    description: 'Table item count',
+    type: 'number',
+    example: '1000',
+  })
+  cnt: number;
+
+  @ApiProperty({
+    description: 'Response item array',
+    type: [${capitalize(tblName)}],
+    example: [],
+  })
+  data: ${capitalize(tblName)}Dto[];
+}`;
+  fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}ListResponse.dto.ts`), tsListResponseDto);
+
+  /**
    * Controller
    */
   const tsController = `import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus, Param , Post, UseGuards,
 } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
+import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
 import { ${capitalize(tblName)}FilterDto } from './dto/${capitalize(tblName)}Filter.dto';
 import { ${capitalize(tblName)}Service } from './${tblName}.service';
 
@@ -96,8 +124,8 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: 200, description: 'Response with list' })
-  list(@Body() filter: ${capitalize(tblName)}FilterDto) {
+  @ApiResponse({ status: 200, description: 'Response with list', type: ${capitalize(tblName)}ListResponseDto })
+  list(@Body() filter: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
     return this.${tblName}Service.list(filter);
   }
 
@@ -140,8 +168,10 @@ export class ${capitalize(tblName)}Controller {
   let tsService = `import { HttpException, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
+import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
 import { ${capitalize(tblName)}FilterDto } from './dto/${capitalize(tblName)}Filter.dto';
 import { DbService } from '../../shared/db/db.service';
+import { CustomLogger } from '../../shared/logger/custom-logger';
 
 @Injectable()
 export class ${capitalize(tblName)}Service {
@@ -154,8 +184,8 @@ export class ${capitalize(tblName)}Service {
 `;
 
   tsService += `
-  list(filter: ${capitalize(tblName)}FilterDto): Observable<${capitalize(tblName)}Dto[]> {
-    return new Observable<${capitalize(tblName)}Dto[]>((observer) => {
+  list(filter: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
+    return new Observable<${capitalize(tblName)}ListResponseDto>((observer) => {
       this.db.query('SELECT ${schemaName}.${tblName}_list($1)', [filter]).subscribe(
         (respSQL) => {
           if (respSQL.error) {
