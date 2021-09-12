@@ -240,6 +240,7 @@ ts += `    });
     this.route.params
       .pipe(filter((params) => params.id))
       .subscribe((params) => {
+        if (params.id.toString() === '0') { return; }
         this.${tblName}Service.view(params.id).subscribe(
           (item) => {
             this.item = item;
@@ -299,7 +300,7 @@ function generateEditHtml(
   fieldArray.forEach((item) => {
     ts += `
       <mat-form-field class="full-width-input">
-        <mat-label></mat-label>
+        <mat-label>TODO: ${item.field}</mat-label>
         <input matInput formControlName="${item.field}" />
         <mat-error></mat-error>
       </mat-form-field>
@@ -521,7 +522,7 @@ function generateListHtml(
   fieldArray.forEach((item) => {
     ts += `      <ng-container matColumnDef="${item.field}">
         <th mat-header-cell mat-sort-header *matHeaderCellDef>
-          TODO: Header ${item.field}
+          TODO: ${item.field}
         </th>
         <td mat-cell *matCellDef="let item" class="column-dt">
           {{item.${item.field}}}
