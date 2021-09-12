@@ -155,41 +155,41 @@ export class ${capitalize(tblName)}Controller {
   }
 
   @Post('list')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: 200, description: 'Response with list', type: ${capitalize(tblName)}ListResponseDto })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Response with list', type: ${capitalize(tblName)}ListResponseDto })
   list(@Body() filter: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
     return this.${tblName}Service.list(filter);
   }
 
   @Get(':id')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: 200, description: 'Response description', type: ${capitalize(tblName)}Dto })
-  get(@Param('id') id: number) {
+  @ApiResponse({ status: HttpStatus.OK, description: 'Response description', type: ${capitalize(tblName)}Dto })
+  get(@Param('id') id: number): Observable< ${capitalize(tblName)}Dto > {
     return this.${tblName}Service.get(id);
   }
 
   @Post()
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: 200, description: 'Response with id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Response with id' })
   add(@Body() ${tblName}: ${capitalize(tblName)}Dto) {
     return this.${tblName}Service.save(${tblName});
   }
 
   @Delete(':id')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: 200, description: 'Deleted' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Deleted' })
   delete(@Param('id') id: number) {
     return this.${tblName}Service.delete(id);
   }
