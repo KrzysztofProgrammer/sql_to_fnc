@@ -1,6 +1,14 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.3.0 _2021-09-12_
+* NestJS API directory change - create global dto definition dir and module dir
+* Add: filter for list can use more than one field for search
+* Add: filter for list can sort by more than one column
+* Unification http code 200 to HttpStatus.OK
+* Code refactoring - use functions to split big code page, common.ts with global functions
+* Fix: edit.component.html - user variable instead of item
+
 ## Version 0.2.0 _2021-09-05_
 
 * Fix: filter DTO

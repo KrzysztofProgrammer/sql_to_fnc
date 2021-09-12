@@ -1,18 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-
-
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function isNumber(item: FieldDefinition): boolean {
-  if (['INT4', 'INT8', 'INTEGER'].indexOf(item.type.toUpperCase()) >= 0) {
-    return true;
-  }
-  return false;
-}
+import {capitalize, isNumber} from "./common";
 
 /**
  * Module
@@ -100,8 +89,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Configuration,
+  ListFilterRequestDto,
   ${capitalize(tblName)}Dto,
-  ${capitalize(tblName)}FilterDto,
   ${capitalize(tblName)}ListResponseDto,
   ${capitalize(tblName)}Service as Api${capitalize(tblName)}Service,
 } from '../api';
@@ -120,7 +109,7 @@ export class ${capitalize(tblName)}Service {
     this.api${capitalize(tblName)}Service = new Api${capitalize(tblName)}Service(this.httpClient, basePath, conf);
   }
 
-  public list(body: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
+  public list(body: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
     return this.api${capitalize(tblName)}Service.${tblName}ControllerList(body);
   }
 
@@ -136,9 +125,9 @@ export class ${capitalize(tblName)}Service {
     return this.api${capitalize(tblName)}Service.${tblName}ControllerGet(id);
   }
 
-  public getGroups() {
-    return this.api${capitalize(tblName)}Service.${tblName}ControllerGetGroups();
-  }
+  // public getGroups() {
+  //   return this.api${capitalize(tblName)}Service.${tblName}ControllerGetGroups();
+  // }
 }`;
   fs.writeFileSync(path.join('dist', 'www', `${tblName}.service.ts`  ), serviceTs);
 }
@@ -153,7 +142,7 @@ function generateDataSource(
   const dsTS = `import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
-import { ${capitalize(tblName)}Dto, ${capitalize(tblName)}FilterDto } from '../api';
+import { ${capitalize(tblName)}Dto, ListFilterRequestDto } from '../api';
 import { ${capitalize(tblName)}Service } from './${tblName}.service';
 
 export class ${capitalize(tblName)}Datasource extends DataSource< ${capitalize(tblName)}Dto> {
@@ -171,7 +160,7 @@ export class ${capitalize(tblName)}Datasource extends DataSource< ${capitalize(t
     super();
   }
 
-  load(filter: ${capitalize(tblName)}FilterDto) {
+  load(filter: ListFilterRequestDto) {
     this.loadingSubject.next(true);
     this.${tblName}Service.list(filter)
       .pipe(
@@ -244,8 +233,8 @@ export class EditComponent {
     } else {
       ts += '\'\'';
     }
-    if (item.notNull) { ts += ',Validators.required'}
-    ts += ']\n';
+    if (item.notNull) { ts += ', Validators.required'}
+    ts += '],\n';
   });
 ts += `    });
     this.route.params
@@ -301,8 +290,8 @@ function generateEditHtml(
 ) {
   let ts = `<mat-card>
   <mat-card-header>
-    <h2 *ngIf="user">Edit</h2>
-    <h2 *ngIf="!user">Add</h2>
+    <h2 *ngIf="item">Edit</h2>
+    <h2 *ngIf="!item">Add</h2>
   </mat-card-header>
   <mat-card-content>
     <form [formGroup]="form">\n`;
@@ -400,7 +389,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       (cnt) => { this.dataSize = cnt; },
     );
     this.listTable.load({
-      ${fieldArray[1].field}: '%',
+      filter: [],
       page_size: 25,
       sort_direction: 'asc',
       page_index: 0,
@@ -435,7 +424,10 @@ export class ListComponent implements OnInit, AfterViewInit {
     let filter = this.searchInput?.nativeElement.value;
     filter += '%';
     this.listTable?.load({
-      ${fieldArray[1].field}: filter,
+      filter: [{
+         field: '${fieldArray[1].field}',
+         value: filter, 
+      }],
       page_index: this.paginator?.pageIndex,
       page_size: this.paginator?.pageSize,
       sort_direction: this.sort?.direction,

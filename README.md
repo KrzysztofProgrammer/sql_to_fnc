@@ -48,11 +48,13 @@ It will create files in dist/sql directory with functions :
 ## Generation NestJS API
 
 It will generate files:
-* dist/api/dto/User.dto.ts  - with type definition for user
-* dist/api/dto/UserFilter.dto.ts - list filter. Example: ```{"filter": "%", "page_size": 25, "page_index": 1, "sort_direction": "asc"}```
-* dist/api/dto/UserListResponse.dto.ts  - response from list function with table count information and data array - filtered user table
-* dist/api/user.controller.ts - with API endpoints: POST /list, GET :id, POST /, DELETE :id
-* dist/api/user.service.ts - with methods covering controller above definitions: list, save, get, delete. All methods call SQL functions.
+* dist/api/dto/FilterItem.dto.ts - global definition for filter item, used in ListFilterRequest 
+* dist/api/dto/ListFilterRequest.dto.ts - global definition request for list api
+* dist/api/customer/dto/User.dto.ts  - with type definition for user
+* dist/api/customer/dto/UserFilter.dto.ts - list filter. Example: ```{"filter": [{"field": "login", "value": "Joh%"}], "sort": ["login"], "page_size": 25, "page_index": 1, "sort_direction": "asc"}```
+* dist/api/customer/dto/UserListResponse.dto.ts  - response from list function with table count information and data array - filtered user table
+* dist/api/customer/user.controller.ts - with API endpoints: POST /list, GET :id, POST /, DELETE :id
+* dist/api/customer/user.service.ts - with methods covering controller above definitions: list, save, get, delete. All methods call SQL functions.
 
 ## Generation E2E supertest files
 

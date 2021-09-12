@@ -1,10 +1,9 @@
 import { FieldDefinition } from "./sql_to_fnc.interfaces";
 import * as fs from "fs";
 import * as path from "path";
+import { capitalize } from "./common";
 
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+
 
 function testData(elem: FieldDefinition): string {
   switch (elem.type) {
@@ -168,11 +167,12 @@ testDataTs += `export const ${tblName}WrongItem : ${capitalize(tblName)}Dto = {\
   testDataTs = testDataTs.slice(0, -2);
   testDataTs += '\n};\n'
 
-  testDataTs +=`export const ${tblName}Filter: ${capitalize(tblName)}FilterDto = {
-  ${fieldArray[1].field}: '%',
+  testDataTs +=`export const ${tblName}Filter: ListFilterRequestDto = {
+  filter: [{ field: '${fieldArray[1].field}', value: '%' }],
   page_index: 1,
   sort_direction: 'asc',
-  page_size: 25
+  sort: ['${fieldArray[1].field}'],
+  page_size: 25,
 }`;
 
 

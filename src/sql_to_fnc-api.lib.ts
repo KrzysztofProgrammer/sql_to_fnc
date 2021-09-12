@@ -1,39 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
+import { capitalize, isNumber, isString } from "./common";
 /**
  * Generate API NestJS templates
  */
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
 
-function isNumber(item: FieldDefinition): boolean {
-  if (['INT4', 'INT8', 'INTEGER'].indexOf(item.type.toUpperCase()) >= 0) {
-    return true;
-  }
-  return false;
-}
-
-function isString(item: FieldDefinition): boolean {
-  if (
-    (item.type.toUpperCase().indexOf('VARCHAR') >= 0)
-    || (item.type.toUpperCase().indexOf('BPCHAR') >= 0)
-    || (item.type.toUpperCase().indexOf('TEXT') >= 0)
-  ) return true;
-  return false;
-}
-
-export function generateAPI(
+function generateModelDto(
   schemaName: string,
   tblName: string,
   fieldArray: FieldDefinition[],
 ) {
-
-  if (!fs.existsSync(path.join('dist', 'api', 'dto'))) {
-    fs.mkdirSync(path.join('dist', 'api', 'dto'), { recursive: true });
-  }
-
   /**
    * model DTO
    */
@@ -57,25 +34,56 @@ export class ${dtoName} {\n`;
     tsDto += `  ${item.field}: ${tsType};\n\n`;
   });
   tsDto += '}';
-  fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}.dto.ts`), tsDto);
+  fs.writeFileSync(path.join('dist', 'api', tblName, 'dto', `${capitalize(tblName)}.dto.ts`), tsDto);
+}
 
+/**
+ * FilterItem.dto.ts - NestJS global definition
+ */
+function generateFilterItemDto() {
   /**
-   * Filter Dto
+   * FilterItem Dto
    */
-  const filterDtoName = `${capitalize(tblName)}FilterDto`;
   let tsFilterDto = `import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsString } from 'class-validator';
 
-export class ${filterDtoName} {\n
-  @IsNotEmpty()
+export class FilterItemDto {
   @IsString()
   @ApiProperty({
-    description: 'Search field ${fieldArray[1].field}',
+    description: 'Field name to be search on',
     type: 'string',
-    example: '%',
+    example: 'name',
   })
-  ${fieldArray[1].field}: string;
+  field: string;
 
+  @IsString()
+  @ApiProperty({
+    description: 'Search value',
+    type: 'string',
+    example: 'Kowalski',
+  })
+  value: string;
+}`;
+  fs.writeFileSync(path.join('dist', 'api', 'dto', `FilterItem.dto.ts`), tsFilterDto);
+}
+
+/**
+ * ListFilterRequest.dto  - NestJS global definition
+ */
+function generateListFilterRequestDto() {
+  let tsItem =`import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { FilterItemDto } from './FilterItem.dto';
+
+export class ListFilterRequestDto {
+  @IsArray()
+  @ApiProperty({
+    description: 'List filtered fields with search values',
+    type: [FilterItemDto],
+    required: false,
+  })
+  filter: FilterItemDto[];
+  
   @IsString()
   @ApiProperty({
     description: 'Sort direction',
@@ -83,8 +91,18 @@ export class ${filterDtoName} {\n
     enum: ['asc', 'desc', ''],
     example: 'asc',
   })
-  sort_direction:string;
-
+  sort_direction: string;
+  
+  @IsArray()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'Fields to be sorted',
+    type: '[string]',
+    example: '[\\'name\\', \\'surname\\']',
+    required: false,
+  })
+  sort: string[];
+  
   @IsNotEmpty()
   @IsNumber()
   @ApiProperty({
@@ -93,7 +111,7 @@ export class ${filterDtoName} {\n
     example: '1',
   })
   page_index: number;
-
+  
   @IsNotEmpty()
   @IsNumber()
   @ApiProperty({
@@ -101,13 +119,18 @@ export class ${filterDtoName} {\n
     type: 'number',
     example: 25,
   })
-  page_size: number;\n`;
-  tsFilterDto += '}';
-  fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}Filter.dto.ts`), tsFilterDto);
+  page_size: number;
+}`;
+  fs.writeFileSync(path.join('dist', 'api', 'dto', `ListFilterRequest.dto.ts`), tsItem);
+}
 
-  /**
-   * List Response Dto
-   */
+/**
+ * List Response Dto
+ */
+function generateListResponseDto(
+  schemaName: string,
+  tblName: string,
+) {
   let tsListResponseDto = `import { IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ${capitalize(tblName)}Dto } from './${capitalize(tblName)}.dto';
@@ -128,11 +151,16 @@ export class ${capitalize(tblName)}ListResponseDto {
   })
   data: ${capitalize(tblName)}Dto[];
 }`;
-  fs.writeFileSync(path.join('dist', 'api', 'dto', `${capitalize(tblName)}ListResponse.dto.ts`), tsListResponseDto);
+  fs.writeFileSync(path.join('dist', 'api', tblName, 'dto', `${capitalize(tblName)}ListResponse.dto.ts`), tsListResponseDto);
+}
 
-  /**
-   * Controller
-   */
+/**
+ * Controller
+ */
+function generateController(
+  schemaName: string,
+  tblName: string,
+) {
   const tsController = `import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus, Param , Post, UseGuards,
@@ -141,7 +169,7 @@ import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
 import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
-import { ${capitalize(tblName)}FilterDto } from './dto/${capitalize(tblName)}Filter.dto';
+import { ListFilterRequestDto } from '../dto/ListFilterRequest.dto';
 import { ${capitalize(tblName)}Service } from './${tblName}.service';
 
 @ApiTags('${tblName}')
@@ -160,7 +188,7 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with list', type: ${capitalize(tblName)}ListResponseDto })
-  list(@Body() filter: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
+  list(@Body() filter: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
     return this.${tblName}Service.list(filter);
   }
 
@@ -195,16 +223,21 @@ export class ${capitalize(tblName)}Controller {
   }
 }
 `;
-  fs.writeFileSync(path.join('dist', 'api', `${tblName}.controller.ts`), tsController);
+  fs.writeFileSync(path.join('dist', 'api', tblName, `${tblName}.controller.ts`), tsController);
+}
 
-  /**
-   * service
-   */
+/**
+ * Service
+ */
+function generateService(
+  schemaName: string,
+  tblName: string,
+) {
   let tsService = `import { HttpException, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
 import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
-import { ${capitalize(tblName)}FilterDto } from './dto/${capitalize(tblName)}Filter.dto';
+import { ListFilterRequestDto } from '../dto/ListFilterRequest.dto';
 import { DbService } from '../../shared/db/db.service';
 import { CustomLogger } from '../../shared/logger/custom-logger';
 
@@ -219,7 +252,7 @@ export class ${capitalize(tblName)}Service {
 `;
 
   tsService += `
-  list(filter: ${capitalize(tblName)}FilterDto): Observable< ${capitalize(tblName)}ListResponseDto > {
+  list(filter: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
     return new Observable<${capitalize(tblName)}ListResponseDto>((observer) => {
       this.db.query('SELECT ${schemaName}.${tblName}_list($1)', [filter]).subscribe(
         (respSQL) => {
@@ -295,5 +328,31 @@ export class ${capitalize(tblName)}Service {
   }
 }
 `;
-  fs.writeFileSync(path.join('dist', 'api', `${tblName}.service.ts`), tsService);
+  fs.writeFileSync(path.join('dist', 'api', tblName, `${tblName}.service.ts`), tsService);
+}
+
+export function generateAPI(
+  schemaName: string,
+  tblName: string,
+  fieldArray: FieldDefinition[],
+) {
+  // Create module directory
+  if (!fs.existsSync(path.join('dist', 'api', tblName, 'dto'))) {
+    fs.mkdirSync(path.join('dist', 'api', tblName, 'dto'), { recursive: true });
+  }
+  // Create global DTO directory
+  if (!fs.existsSync(path.join('dist', 'api', 'dto'))) {
+    fs.mkdirSync(path.join('dist', 'api', 'dto'), { recursive: true });
+  }
+  generateModelDto(schemaName, tblName, fieldArray);
+
+  generateFilterItemDto();
+
+  generateListFilterRequestDto();
+
+  generateListResponseDto(schemaName, tblName);
+
+  generateController(schemaName, tblName);
+
+  generateService(schemaName, tblName);
 }

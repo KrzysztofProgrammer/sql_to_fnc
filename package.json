@@ -1,6 +1,6 @@
 {
   "name": "sql_to_fnc",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Based on SQL table definition will create SQL functions, NestJS dto, controller and service",
   "author": "Krzysztof Czajka",
   "private": true,
