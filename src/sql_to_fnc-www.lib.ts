@@ -373,7 +373,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   // @ts-ignore
-  @ViewChild('searchInput') searchInput: ElementRef;
+  @ViewChild('search${capitalize(fieldArray[1].field)}Input') searchInput: ElementRef;
 
   dataSize: number = 0;
 
@@ -400,35 +400,45 @@ export class ListComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.sort.sortChange.subscribe(() => { this.paginator.pageIndex = 0; });
 
-    fromEvent(this.searchInput.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        distinctUntilChanged(),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.load();
-        }),
-      )
-      .subscribe();
+    merge(
+      fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
+    ).pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      tap(() => {
+        this.paginator.pageIndex = 0;
+        this.load();
+      }),
+    ).subscribe();
 
-    merge(this.sort.sortChange, this.paginator.page)
-      .pipe(
-        tap(() => this.load()),
-      )
-      .subscribe();
+    merge(
+      this.sort.sortChange,
+      this.paginator.page
+    ).pipe(
+      tap(() => this.load()),
+    ).subscribe();
   }
 
   load() {
+    // Check if elements are initialized
     if ((!this.searchInput) || (!this.sort)) {
       return;
     }
-    let filter = this.searchInput?.nativeElement.value;
-    filter += '%';
+    const filter = [];
+    if (this.searchImieInput?.nativeElement.value) {
+      filter.push({
+        field: '${fieldArray[1].field}',
+        value: \`\${this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value}%\`,
+      });
+    }
+    const sort = [];
+    if (this.sort.active) {
+      sort.push(this.sort.active);
+    }
+
     this.listTable?.load({
-      filter: [{
-         field: '${fieldArray[1].field}',
-         value: filter, 
-      }],
+      filter,
+      sort,
       page_index: this.paginator?.pageIndex,
       page_size: this.paginator?.pageSize,
       sort_direction: this.sort?.direction,
@@ -502,9 +512,9 @@ function generateListHtml(
           <mat-icon>add</mat-icon>
           Add
         </button>
-        <mat-form-field  class="header-item">
+        <mat-form-field class="header-item">
           <mat-label>Search</mat-label>
-          <input matInput placeholder="Search field" #searchInput>
+          <input matInput placeholder="Search field" #search${capitalize(fieldArray[1].field)}Input>
         </mat-form-field>
       </div>
     </div>
