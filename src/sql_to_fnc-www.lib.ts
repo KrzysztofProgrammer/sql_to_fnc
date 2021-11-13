@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import {capitalize, isNumber} from "./common";
-
+import { capitalize, isNumber, isBoolean, isDate } from "./common";
+import { datePlaceholder } from '../sql_to_fnc.constans';
 /**
  * Module
  */
@@ -284,6 +284,35 @@ mat-card-footer {
   fs.writeFileSync(path.join('dist', 'www', 'edit', 'edit.component.scss' ), ts);
 }
 
+function generateFormField(item: FieldDefinition): string {
+  if (isBoolean(item)) {
+    return `
+      <mat-form-field class="full-width-input">
+        <mat-slide-toggle formControlName="${item.field}">TODO: ${item.field}</mat-slide-toggle>
+        <textarea matInput hidden></textarea>
+        <mat-error></mat-error>
+      </mat-form-field>
+    `;
+  }
+  if (isDate(item)) {
+    return `      
+      <mat-form-field class="full-width-input">
+        <mat-label>TODO: ${item.field}</mat-label>
+        <input matInput formControlName="${item.field}" [matDatepicker]="picker${capitalize(item.field)}" placeholder="${datePlaceholder}"/>
+        <mat-datepicker-toggle matSuffix [for]="picker${item.field}"></mat-datepicker-toggle>
+        <mat-datepicker #picker${capitalize(item.field)}></mat-datepicker>
+        <mat-error></mat-error>
+      </mat-form-field>`;
+  }
+  return `
+      <mat-form-field class="full-width-input">
+        <mat-label>TODO: ${item.field}</mat-label>
+        <input matInput formControlName="${item.field}" />
+        <mat-error></mat-error>
+      </mat-form-field>
+    `;
+}
+
 function generateEditHtml(
   schemaName: string,
   tblName: string,
@@ -298,13 +327,7 @@ function generateEditHtml(
     <form [formGroup]="form">\n`;
 
   fieldArray.forEach((item) => {
-    ts += `
-      <mat-form-field class="full-width-input">
-        <mat-label>TODO: ${item.field}</mat-label>
-        <input matInput formControlName="${item.field}" />
-        <mat-error></mat-error>
-      </mat-form-field>
-    `;
+    ts += generateFormField(item);
   });
 
   ts += ` </form>

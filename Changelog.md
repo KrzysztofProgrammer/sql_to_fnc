@@ -1,6 +1,12 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.4.0 _2021-11-14_
+* Add to edit HTML generator formfield type recognition for:
+  * boolean - mat-slide-toggle
+  * date - mat-datepicker, information about placeholder is stored at sql_to_fnc.constans.ts
+
+
 ## Version 0.3.0 _2021-09-12_
 * NestJS API directory change - create global dto definition dir and module dir
 * Add: filter for list can use more than one field for search
