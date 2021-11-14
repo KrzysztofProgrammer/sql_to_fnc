@@ -5,6 +5,7 @@ import { generateAPI } from './src/sql_to_fnc-api.lib';
 import { FieldDefinition } from './src/sql_to_fnc.interfaces';
 import { generateTestE2E } from './src/sql_to_fnc-test.lib';
 import { generateAngularModule } from './src/sql_to_fnc-www.lib';
+import {getDescription} from "./src/common";
 
 const args = process.argv.slice(2);
 if (!args[0]) {
@@ -36,6 +37,9 @@ let sequenceName = '';
 const fieldArray: FieldDefinition[] = [];
 sqlFile.split('\n').forEach((line) => {
   const elems = line.trim().split(/\s+/);
+  if (elems[0].toUpperCase() === 'COMMENT') {
+    return;
+  }
   if (elems[0].toUpperCase() === 'CREATE') {
     schemaName = elems[2].split('.')[0];
     tblName = elems[2].split('.')[1];
@@ -51,6 +55,7 @@ sqlFile.split('\n').forEach((line) => {
     field: elems[0],
     type: elems[1].toUpperCase(),
     notNull: line.toUpperCase().indexOf('NOT NULL') >= 0,
+    description: getDescription(tblName, elems[0], sqlFile),
   });
   // Check sequence name
   const nextVal = line.toUpperCase().indexOf('NEXTVAL(');

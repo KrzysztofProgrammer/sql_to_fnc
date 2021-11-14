@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import { capitalize, isNumber, isString } from "./common";
+import { capitalize, isNumber, isBoolean, isString } from "./common";
 /**
  * Generate API NestJS templates
  */
@@ -23,11 +23,12 @@ export class ${dtoName} {\n`;
     // Set swagger decorators
     let tsType = 'string';
     if (isNumber(item)) { tsType = 'number'; }
+    if (isBoolean(item)) { tsType = 'boolean'; }
     if (item.notNull) { tsDto += '  @IsNotEmpty()\n'; }
     if (isNumber(item)) { tsDto += '  @IsNumber()\n'; }
     if (isString(item)) { tsDto += '  @IsString()\n'; }
     tsDto += `  @ApiProperty({
-    description: '',
+    description: '${item.description}',
     type: '${tsType}',
     example: '',
   })\n`;

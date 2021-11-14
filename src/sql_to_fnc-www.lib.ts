@@ -288,7 +288,7 @@ function generateFormField(item: FieldDefinition): string {
   if (isBoolean(item)) {
     return `
       <mat-form-field class="full-width-input">
-        <mat-slide-toggle formControlName="${item.field}">TODO: ${item.field}</mat-slide-toggle>
+        <mat-slide-toggle formControlName="${item.field}">TODO: ${item.description}</mat-slide-toggle>
         <textarea matInput hidden></textarea>
         <mat-error></mat-error>
       </mat-form-field>
@@ -297,7 +297,7 @@ function generateFormField(item: FieldDefinition): string {
   if (isDate(item)) {
     return `      
       <mat-form-field class="full-width-input">
-        <mat-label>TODO: ${item.field}</mat-label>
+        <mat-label>TODO: ${item.description}</mat-label>
         <input matInput formControlName="${item.field}" [matDatepicker]="picker${capitalize(item.field)}" placeholder="${datePlaceholder}"/>
         <mat-datepicker-toggle matSuffix [for]="picker${item.field}"></mat-datepicker-toggle>
         <mat-datepicker #picker${capitalize(item.field)}></mat-datepicker>
@@ -306,7 +306,7 @@ function generateFormField(item: FieldDefinition): string {
   }
   return `
       <mat-form-field class="full-width-input">
-        <mat-label>TODO: ${item.field}</mat-label>
+        <mat-label>TODO: ${item.description}</mat-label>
         <input matInput formControlName="${item.field}" />
         <mat-error></mat-error>
       </mat-form-field>

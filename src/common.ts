@@ -31,3 +31,30 @@ export function isDate(item: FieldDefinition): boolean {
   }
   return false;
 }
+
+/**
+ *  Check if there is comment, if not - stay with field name
+ */
+export function getDescription(tblName: string, fieldName: string, sqlFileContent: string) {
+  let response = fieldName;
+  sqlFileContent.split('\n').forEach((line) => {
+    const elems = line.trim().split(/\s+/);
+    if (elems.length < 6) { return; }
+    if (elems[0].toUpperCase() !== 'COMMENT') {
+      return;
+    }
+    if (elems[1].toUpperCase() !== 'ON') {
+      return;
+    }
+    if (elems[2].toUpperCase() !== 'COLUMN') {
+      return;
+    }
+    if (elems[3].toUpperCase().indexOf(`${tblName.toUpperCase()}.${fieldName.toUpperCase()}`) === -1) {
+      return;
+    }
+    const descArr = line.trim().split(`'`);
+    response = descArr[1];
+    return;
+  });
+  return response;
+}

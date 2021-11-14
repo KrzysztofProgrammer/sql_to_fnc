@@ -2,7 +2,8 @@
 
 Project will generate PostgreSQL functions ``_delete``, ``_get``, ``_list``, ``_save`` using DDL CREATE TABLE definition. 
 It will also create NestJS dto definition, service, controller template and basic E2E tests. 
-Of course, this will not meet in 100% yours needs, but will speed up development time.
+Comments on table column is used for API description and labels for edits. 
+Of course, this will not meet in 100% yours needs, but will speed up your development time.
 
 ## Usage
 ! Important ! Before usage please reconfigure database user inside sql_to_fnc.constants.ts
@@ -24,8 +25,13 @@ CREATE TABLE auth.user
   id                 integer    NOT NULL DEFAULT NEXTVAL('user_serial'::regclass),
   login              varchar    NOT NULL,
   active             boolean    NOT NULL DEFAULT true,
-  password           varchar    NOT NULL
-)
+  password           varchar    NOT NULL,
+  notes              varchar
+);
+COMMENT ON COLUMN auth.user.login IS 'Login, minimum 3 letters';
+COMMENT ON COLUMN auth.user.active IS 'Is account active?';
+COMMENT ON COLUMN auth.user.password IS 'Please use minimum 8 letters, upper and lower case, number';
+COMMENT ON COLUMN auth.user.notes IS 'Admin notes about user';
 ```
 Main assumptions:
 * file should have only table definition
@@ -34,7 +40,7 @@ Main assumptions:
 * table name should not be in plural (wrong table name: users)
 * primary key is first element, number type with NEXTVAL() definition
 * second element (in this case - login) will be searchable at list method (inside filter)
- 
+
 
 ## Generation SQL functions
 
