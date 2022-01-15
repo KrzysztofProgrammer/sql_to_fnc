@@ -1,8 +1,13 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.5.0 _2022-01-15_
+* Add: edit HTML - validation check on save
+* Add: list HTML - clickable row for edit action
+* Add: Model NestJS IsOptional()
+
 ## Version 0.4.0 _2021-11-14_
-* Add to edit HTML generator formfield type recognition for:
+* Add: edit HTML - generator formfield type recognition for:
   * boolean - mat-slide-toggle
   * date - mat-datepicker, information about placeholder is stored at sql_to_fnc.constans.ts
 * Add COMMENT ON COLUMN parser - use as description at model and add labels on HTML

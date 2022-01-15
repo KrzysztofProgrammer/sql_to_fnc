@@ -16,7 +16,7 @@ function generateModelDto(
    */
   const dtoName = `${capitalize(tblName)}Dto`;
   let tsDto = `import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class ${dtoName} {\n`;
   fieldArray.forEach((item) => {
@@ -27,6 +27,11 @@ export class ${dtoName} {\n`;
     if (item.notNull) { tsDto += '  @IsNotEmpty()\n'; }
     if (isNumber(item)) { tsDto += '  @IsNumber()\n'; }
     if (isString(item)) { tsDto += '  @IsString()\n'; }
+    if (
+      (!item.notNull) && (isNumber(item) || isString(item))
+    ) {
+      tsDto += '  @IsOptional()\n';
+    }
     tsDto += `  @ApiProperty({
     description: '${item.description}',
     type: '${tsType}',

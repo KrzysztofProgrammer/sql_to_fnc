@@ -252,6 +252,11 @@ ts += `    });
 
   save() {
     if (this.form.invalid) {
+      Object.keys(this.form.controls).forEach((field) => {
+        const control = this.form.get(field);
+        control?.markAsTouched({ onlySelf: true });
+      });
+      this.alert.error('There is error on form.');
       return;
     }
     this.${tblName}Service.save(this.form.value).subscribe(
@@ -497,6 +502,23 @@ function generateListScss() {
   width: 100%;
 }
 
+.mat-row .mat-cell {
+  border-bottom: 1px solid transparent;
+  border-top: 1px solid transparent;
+}
+
+.mat-row:hover .mat-cell {
+  border-color: currentColor;
+}
+
+.column-desc {
+  cursor: pointer;
+}
+
+.column-dt {
+  cursor: pointer;
+}
+
 .column-actions {
   width: 120px;
 }
@@ -557,7 +579,10 @@ function generateListHtml(
         <th mat-header-cell mat-sort-header *matHeaderCellDef>
           TODO: ${item.field}
         </th>
-        <td mat-cell *matCellDef="let item" class="column-dt">
+        <td
+          (click)="edit(item.${fieldArray[0].field})" 
+          mat-cell 
+          *matCellDef="let item" class="column-dt">
           {{item.${item.field}}}
         </td>
       </ng-container>`;
