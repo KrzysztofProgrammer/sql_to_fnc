@@ -1,12 +1,21 @@
 # SQL to PostgreSQL function, CRUD generator for NestJS
 
-Project will generate PostgreSQL functions ``_delete``, ``_get``, ``_list``, ``_save`` using DDL CREATE TABLE definition. 
-It will also create NestJS dto definition, service, controller template and basic E2E tests. 
+Project using DDL CREATE TABLE definition will generate:
+* PostgreSQL functions ``_delete``, ``_get``, ``_list``, ``_save`` . 
+* NestJS REST API with dto definition, service, controller template and basic E2E tests. 
+* WWW Angular module with: dto-s, service, routing, edit page and list page with pagination and basic filtering
+
+
 Comments on table column is used for API description and labels for edits. 
 Of course, this will not meet in 100% yours needs, but will speed up your development time.
 
 ## Usage
-! Important ! Before usage please reconfigure database user inside sql_to_fnc.constants.ts
+! Important ! Before usage please change inside sql_to_fnc.constants.ts database user name.
+
+*Linux usage:*
+```
+node .\sql_to_fnc.ts .\table.example.sql
+```
 
 *Windows usage:*
 ```
@@ -51,7 +60,7 @@ It will create files in dist/sql directory with functions :
 * auth.user_save(user varchar) - parameter is JSONB object cast on varchar. If id more than zero - will update data, else - will create new record.
 
 
-## Generation NestJS API
+## Generation NestJS REST API
 
 It will generate files:
 * dist/api/dto/FilterItem.dto.ts - global definition for filter item, used in ListFilterRequest 
