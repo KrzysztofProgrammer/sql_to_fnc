@@ -213,6 +213,7 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with id' })
   add(@Body() ${tblName}: ${capitalize(tblName)}Dto) {
     return this.${tblName}Service.save(${tblName});
@@ -223,6 +224,7 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Deleted' })
   delete(@Param('id') id: number) {
     return this.${tblName}Service.delete(id);

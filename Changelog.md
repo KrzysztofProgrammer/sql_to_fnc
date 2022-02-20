@@ -1,6 +1,10 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.5.1 _2022-02-20_
+* Fix: API - delete and save add information about HTML 404 NOT_FOUND response code
+* Fix: SQL - check if updated item exist, response with 404 error code
+
 ## Version 0.5.0 _2022-01-15_
 * Add: edit HTML - validation check on save
 * Add: list HTML - clickable row for edit action

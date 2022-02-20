@@ -221,6 +221,10 @@ BEGIN
   f_id   = CAST( f_data->>'${fieldArray[0].field}' as INTEGER );
 
   IF f_id > 0 THEN
+      PERFORM 1 FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = a_id;
+      IF NOT FOUND THEN
+        RETURN jsonb_build_object('error', 'Item not exist', 'code', 404);
+      END IF;
       UPDATE ${schemaName}.${tblName} SET \n`;
 
   fieldArray.forEach((item) => {
