@@ -1,8 +1,7 @@
-import { FieldDefinition } from "./sql_to_fnc.interfaces";
-import * as fs from "fs";
-import * as path from "path";
-import { capitalize } from "./common";
-
+import * as fs from 'fs';
+import * as path from 'path';
+import { FieldDefinition } from './sql_to_fnc.interfaces';
+import { capitalize, snakeToCamel, snakeToDash } from './common';
 
 
 function testData(elem: FieldDefinition): string {
@@ -39,10 +38,14 @@ export function generateTestE2E(
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
-import { ${tblName}Filter, ${tblName}ValidItem, ${tblName}WrongItem } from './data/${capitalize(tblName)}.data';
+import { 
+  ${snakeToCamel(tblName, false)}Filter,
+  ${snakeToCamel(tblName, false)}ValidItem,
+  ${snakeToCamel(tblName, false)}WrongItem,
+} from './data/${snakeToDash(tblName)}.data';
 
 
-describe('${capitalize(tblName)}', () => {
+describe('${snakeToCamel(tblName)}', () => {
   let app: INestApplication;
   let jwtToken: string;
   let itemFromList: any; // first item from list
@@ -77,14 +80,14 @@ describe('${capitalize(tblName)}', () => {
     done();
   });
 
-  describe('${capitalize(tblName)} service', () => {
+  describe('${snakeToCamel(tblName)} service', () => {
 
     it('/${tblName}/list',
       (done) => request(app.getHttpServer())
         .post('/${tblName}/list')
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send(${tblName}Filter)
+        .send(${snakeToCamel(tblName, false)}Filter)
         .expect('Content-Type', /json/)
         .expect(200)
         .end((err, res) => {
@@ -110,7 +113,7 @@ describe('${capitalize(tblName)}', () => {
         .post('/${tblName}')
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send(${tblName}ValidItem)
+        .send(${snakeToCamel(tblName, false)}ValidItem)
         .expect('Content-Type', /json/)
         .expect(200)
         .end((err, res) => {
@@ -147,27 +150,27 @@ describe('${capitalize(tblName)}', () => {
   });
 });
   `;
-  fs.writeFileSync(path.join('dist','tests',`${tblName}.e2e-spec.ts`), testTs);
+  fs.writeFileSync(path.join('dist','tests',`${snakeToDash(tblName)}.e2e-spec.ts`), testTs);
 
 
   /**
    * Test data
    */
-  let testDataTs = `export const ${tblName}ValidItem: ${capitalize(tblName)}Dto = {\n`;
+  let testDataTs = `export const ${snakeToCamel(tblName, false)}ValidItem: ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
 fieldArray.forEach((item) => {
   testDataTs += `     ${item.field}: ${testData(item)},\n`;
 });
   testDataTs = testDataTs.slice(0, -2);
 testDataTs += '\n};\n'
 
-testDataTs += `export const ${tblName}WrongItem : ${capitalize(tblName)}Dto = {\n`;
+testDataTs += `export const ${snakeToCamel(tblName, false)}WrongItem : ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
   fieldArray.forEach((item) => {
     testDataTs += `     ${item.field}: ${testData(item)},\n`;
   });
   testDataTs = testDataTs.slice(0, -2);
   testDataTs += '\n};\n'
 
-  testDataTs +=`export const ${tblName}Filter: ListFilterRequestDto = {
+  testDataTs +=`export const ${snakeToCamel(tblName, false)}Filter: ListFilterRequestDto = {
   filter: [{ field: '${fieldArray[1].field}', value: '%' }],
   page_index: 1,
   sort_direction: 'asc',
@@ -176,5 +179,5 @@ testDataTs += `export const ${tblName}WrongItem : ${capitalize(tblName)}Dto = {\
 }`;
 
 
-  fs.writeFileSync(path.join('dist','tests','data',`${tblName}.data.ts`), testDataTs);
+  fs.writeFileSync(path.join('dist','tests','data',`${snakeToDash(tblName)}.data.ts`), testDataTs);
 }

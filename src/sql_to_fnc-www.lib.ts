@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import { capitalize, isNumber, isBoolean, isDate } from "./common";
+import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from "./common";
 import { datePlaceholder } from '../sql_to_fnc.constans';
+
 /**
  * Module
  */
@@ -15,8 +16,8 @@ import { CommonModule } from '@angular/common';
 import { ListComponent } from './list/list.component';
 import { EditComponent } from './edit/edit.component';
 import { MaterialModule } from '../shared/material.module';
-import { ${capitalize(tblName)}Service } from './${tblName}.service';
-import { ${capitalize(tblName)}RoutingModule } from './${tblName}-routing.module';
+import { ${snakeToCamel(tblName)}Service } from './${snakeToDash(tblName)}.service';
+import { ${snakeToCamel(tblName)}RoutingModule } from './${snakeToDash(tblName)}-routing.module';
 
 @NgModule({
   declarations: [
@@ -26,15 +27,15 @@ import { ${capitalize(tblName)}RoutingModule } from './${tblName}-routing.module
   imports: [
     CommonModule,
     MaterialModule,
-    ${capitalize(tblName)}RoutingModule,
+    ${snakeToCamel(tblName)}RoutingModule,
   ],
   providers: [
-    ${capitalize(tblName)}Service,
+    ${snakeToCamel(tblName)}Service,
   ],
 })
-export class ${capitalize(tblName)}Module { }
+export class ${snakeToCamel(tblName)}Module { }
 `;
-  fs.writeFileSync(path.join('dist', 'www', `${tblName}.module.ts`  ), moduleTs);
+  fs.writeFileSync(path.join('dist', 'www', `${snakeToDash(tblName)}.module.ts`  ), moduleTs);
 }
 
 /**
@@ -71,11 +72,10 @@ const routes: Routes = [
     RouterModule.forChild(routes),
   ],
 })
-export class ${capitalize(tblName)}RoutingModule { }
+export class ${snakeToCamel(tblName)}RoutingModule { }
 `;
-  fs.writeFileSync(path.join('dist', 'www', `${tblName}-routing.module.ts`  ), moduleTs);
+  fs.writeFileSync(path.join('dist', 'www', `${snakeToDash(tblName)}-routing.module.ts`  ), moduleTs);
 }
-
 
 /**
  * Service
@@ -90,46 +90,46 @@ import { Observable } from 'rxjs';
 import {
   Configuration,
   ListFilterRequestDto,
-  ${capitalize(tblName)}Dto,
-  ${capitalize(tblName)}ListResponseDto,
-  ${capitalize(tblName)}Service as Api${capitalize(tblName)}Service,
+  ${snakeToCamel(tblName)}Dto,
+  ${snakeToCamel(tblName)}ListResponseDto,
+  ${snakeToCamel(tblName)}Service as Api${snakeToCamel(tblName)}Service,
 } from '../api';
 import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ${capitalize(tblName)}Service {
+export class ${snakeToCamel(tblName)}Service {
   constructor(
     private httpClient: HttpClient,
-    private api${capitalize(tblName)}Service: Api${capitalize(tblName)}Service,
+    private api${snakeToCamel(tblName)}Service: Api${snakeToCamel(tblName)}Service,
   ) {
     const basePath = environment.apiUrl;
     const conf = new Configuration();
-    this.api${capitalize(tblName)}Service = new Api${capitalize(tblName)}Service(this.httpClient, basePath, conf);
+    this.api${snakeToCamel(tblName)}Service = new Api${snakeToCamel(tblName)}Service(this.httpClient, basePath, conf);
   }
 
-  public list(body: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
-    return this.api${capitalize(tblName)}Service.${tblName}ControllerList(body);
+  public list(body: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
+    return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerList(body);
   }
 
   public delete(id: number) {
-    return this.api${capitalize(tblName)}Service.${tblName}ControllerDelete(id);
+    return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerDelete(id);
   }
 
-  public save(body: ${capitalize(tblName)}Dto) {
-    return this.api${capitalize(tblName)}Service.${tblName}ControllerAdd(body);
+  public save(body: ${snakeToCamel(tblName)}Dto) {
+    return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerAdd(body);
   }
 
-  public view(id: number): Observable< ${capitalize(tblName)}Dto> {
-    return this.api${capitalize(tblName)}Service.${tblName}ControllerGet(id);
+  public view(id: number): Observable< ${snakeToCamel(tblName)}Dto> {
+    return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerGet(id);
   }
 
   // public getGroups() {
-  //   return this.api${capitalize(tblName)}Service.${tblName}ControllerGetGroups();
+  //   return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerGetGroups();
   // }
 }`;
-  fs.writeFileSync(path.join('dist', 'www', `${tblName}.service.ts`  ), serviceTs);
+  fs.writeFileSync(path.join('dist', 'www', `${snakeToDash(tblName)}.service.ts`  ), serviceTs);
 }
 
 /**
@@ -142,11 +142,11 @@ function generateDataSource(
   const dsTS = `import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
-import { ${capitalize(tblName)}Dto, ListFilterRequestDto } from '../api';
-import { ${capitalize(tblName)}Service } from './${tblName}.service';
+import { ${snakeToCamel(tblName)}Dto, ListFilterRequestDto } from '../api';
+import { ${snakeToCamel(tblName)}Service } from './${snakeToDash(tblName)}.service';
 
-export class ${capitalize(tblName)}Datasource extends DataSource< ${capitalize(tblName)}Dto> {
-  private ${tblName}Subject = new BehaviorSubject<${capitalize(tblName)}Dto[]>([]);
+export class ${snakeToCamel(tblName)}Datasource extends DataSource< ${snakeToCamel(tblName)}Dto> {
+  private ${snakeToCamel(tblName, false)}Subject = new BehaviorSubject<${snakeToCamel(tblName)}Dto[]>([]);
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
@@ -155,14 +155,14 @@ export class ${capitalize(tblName)}Datasource extends DataSource< ${capitalize(t
   public cntSubject = new BehaviorSubject<number>(0);
 
   constructor(
-    private ${tblName}Service: ${capitalize(tblName)}Service,
+    private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
   ) {
     super();
   }
 
   load(filter: ListFilterRequestDto) {
     this.loadingSubject.next(true);
-    this.${tblName}Service.list(filter)
+    this.${snakeToCamel(tblName, false)}Service.list(filter)
       .pipe(
         catchError(() => of([])),
         finalize(() => this.loadingSubject.next(false)),
@@ -171,25 +171,25 @@ export class ${capitalize(tblName)}Datasource extends DataSource< ${capitalize(t
         (items) => {
           if ('data' in items) {
             this.cntSubject.next(items.cnt);
-            this.${tblName}Subject.next(items.data);
+            this.${snakeToCamel(tblName, false)}Subject.next(items.data);
           }
         },
       );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental
-  connect(collectionViewer: CollectionViewer): Observable<${capitalize(tblName)}Dto[]> {
-    return this.${tblName}Subject.asObservable();
+  connect(collectionViewer: CollectionViewer): Observable<${snakeToCamel(tblName)}Dto[]> {
+    return this.${snakeToCamel(tblName, false)}Subject.asObservable();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental
   disconnect(collectionViewer: CollectionViewer): void {
-    this.${tblName}Subject.complete();
+    this.${snakeToCamel(tblName, false)}Subject.complete();
     this.loadingSubject.complete();
     this.cntSubject.complete();
   }
 }`;
-  fs.writeFileSync(path.join('dist', 'www', `${tblName}.datasource.ts`  ), dsTS);
+  fs.writeFileSync(path.join('dist', 'www', `${snakeToDash(tblName)}.datasource.ts`  ), dsTS);
 }
 
 /**
@@ -205,8 +205,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertService } from '../../shared/alert/alert.service';
-import { ${capitalize(tblName)}Dto } from '../../api';
-import { ${capitalize(tblName)}Service } from '../${tblName}.service';
+import { ${snakeToCamel(tblName)}Dto } from '../../api';
+import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.service';
 
 @Component({
   selector: 'app-edit',
@@ -216,10 +216,10 @@ import { ${capitalize(tblName)}Service } from '../${tblName}.service';
 export class EditComponent {
   form: FormGroup;
 
-  item: ${capitalize(tblName)}Dto | undefined;
+  item: ${snakeToCamel(tblName)}Dto | undefined;
 
   constructor(
-    private ${tblName}Service: ${capitalize(tblName)}Service,
+    private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
@@ -241,7 +241,7 @@ ts += `    });
       .pipe(filter((params) => params.id))
       .subscribe((params) => {
         if (params.id.toString() === '0') { return; }
-        this.${tblName}Service.view(params.id).subscribe(
+        this.${snakeToCamel(tblName, false)}Service.view(params.id).subscribe(
           (item) => {
             this.item = item;
             this.form.patchValue(item);
@@ -259,7 +259,7 @@ ts += `    });
       this.alert.error('There is error on form.');
       return;
     }
-    this.${tblName}Service.save(this.form.value).subscribe(
+    this.${snakeToCamel(tblName, false)}Service.save(this.form.value).subscribe(
       () => {
         this.router.navigate(['/${tblName}/list']).then();
       },
@@ -348,8 +348,6 @@ function generateEditHtml(
   fs.writeFileSync(path.join('dist', 'www', 'edit', 'edit.component.html' ), ts);
 }
 
-
-
 /**
  * List
  */
@@ -369,9 +367,9 @@ import { fromEvent, merge } from 'rxjs';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.component';
 import { AlertService } from '../../shared/alert/alert.service';
-import { ${capitalize(tblName)}Service } from '../${tblName}.service';
-import { ${capitalize(tblName)}Dto } from '../../api';
-import { ${capitalize(tblName)}Datasource } from '../${tblName}.datasource';
+import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.service';
+import { ${snakeToCamel(tblName)}Dto } from '../../api';
+import { ${snakeToCamel(tblName)}Datasource } from '../${snakeToDash(tblName)}.datasource';
 
 /**
  * Server side pagination list based on
@@ -384,7 +382,7 @@ import { ${capitalize(tblName)}Datasource } from '../${tblName}.datasource';
   styleUrls: ['./list.component.scss'],
 })
 export class ListComponent implements OnInit, AfterViewInit {
-  list: ${capitalize(tblName)}Dto[] = [];
+  list: ${snakeToCamel(tblName)}Dto[] = [];
 
   // TODO: Remove unnecessary columns, (leave actions)
   displayedColumns = [`;
@@ -394,7 +392,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   ts += ` 'actions'];
 
   // @ts-ignore
-  public listTable: ${capitalize(tblName)}Datasource;
+  public listTable: ${snakeToCamel(tblName)}Datasource;
 
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
@@ -406,14 +404,14 @@ export class ListComponent implements OnInit, AfterViewInit {
   dataSize: number = 0;
 
   constructor(
-    private ${tblName}Service: ${capitalize(tblName)}Service,
+    private ${tblName}Service: ${snakeToCamel(tblName)}Service,
     private router: Router,
     public dialog: MatDialog,
     private alert: AlertService,
   ) { }
 
   ngOnInit(): void {
-    this.listTable = new ${capitalize(tblName)}Datasource(this.${tblName}Service);
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${tblName}Service);
     this.listTable.cntSubject.subscribe(
       (cnt) => { this.dataSize = cnt; },
     );
@@ -477,7 +475,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     this.router.navigate([\`/${tblName}/edit/\${id}\`]).then();
   }
 
-  deleteDlg(row: ${capitalize(tblName)}Dto) {
+  deleteDlg(row: ${snakeToCamel(tblName)}Dto) {
     const dlg = this.dialog.open(DeleteDialogComponent, { data: { title: \`\${row.${fieldArray[1].field}}\` } });
     dlg.afterClosed().subscribe((result) => {
       if (!result) { return; }

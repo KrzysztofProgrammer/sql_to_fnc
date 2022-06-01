@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import { capitalize, isNumber, isBoolean, isString } from "./common";
+import { capitalize, isNumber, isBoolean, isString, snakeToCamel, snakeToDash } from './common';
 /**
  * Generate API NestJS templates
  */
@@ -14,7 +14,7 @@ function generateModelDto(
   /**
    * model DTO
    */
-  const dtoName = `${capitalize(tblName)}Dto`;
+  const dtoName = `${snakeToCamel(tblName)}Dto`;
   let tsDto = `import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
@@ -40,7 +40,7 @@ export class ${dtoName} {\n`;
     tsDto += `  ${item.field}: ${tsType};\n\n`;
   });
   tsDto += '}';
-  fs.writeFileSync(path.join('dist', 'api', tblName, 'dto', `${capitalize(tblName)}.dto.ts`), tsDto);
+  fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), 'dto', `${snakeToCamel(tblName)}.dto.ts`), tsDto);
 }
 
 /**
@@ -139,9 +139,9 @@ function generateListResponseDto(
 ) {
   let tsListResponseDto = `import { IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ${capitalize(tblName)}Dto } from './${capitalize(tblName)}.dto';
+import { ${snakeToCamel(tblName)}Dto } from './${snakeToCamel(tblName)}.dto';
 
-export class ${capitalize(tblName)}ListResponseDto {
+export class ${snakeToCamel(tblName)}ListResponseDto {
   @IsNumber()
   @ApiProperty({
     description: 'Table item count',
@@ -152,12 +152,12 @@ export class ${capitalize(tblName)}ListResponseDto {
 
   @ApiProperty({
     description: 'Response item array',
-    type: [${capitalize(tblName)}],
+    type: [${snakeToCamel(tblName)}],
     example: [],
   })
-  data: ${capitalize(tblName)}Dto[];
+  data: ${snakeToCamel(tblName)}Dto[];
 }`;
-  fs.writeFileSync(path.join('dist', 'api', tblName, 'dto', `${capitalize(tblName)}ListResponse.dto.ts`), tsListResponseDto);
+  fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), 'dto', `${snakeToCamel(tblName)}ListResponse.dto.ts`), tsListResponseDto);
 }
 
 /**
@@ -169,22 +169,22 @@ function generateController(
 ) {
   const tsController = `import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  Body, Controller, Delete, Get, HttpCode, HttpStatus, Param , Post, UseGuards,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
-import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
+import { ${snakeToCamel(tblName)}Dto } from './dto/${snakeToCamel(tblName)}.dto';
+import { ${snakeToCamel(tblName)}ListResponseDto } from './dto/${snakeToCamel(tblName)}ListResponse.dto';
 import { ListFilterRequestDto } from '../dto/ListFilterRequest.dto';
-import { ${capitalize(tblName)}Service } from './${tblName}.service';
+import { ${snakeToCamel(tblName)}Service } from './${snakeToDash(tblName)}.service';
 
 @ApiTags('${tblName}')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('${tblName}')
-export class ${capitalize(tblName)}Controller {
+export class ${snakeToCamel(tblName)}Controller {
   constructor(
-    private ${tblName}Service: ${capitalize(tblName)}Service,
+    private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
   ) {
   }
 
@@ -193,9 +193,9 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Response with list', type: ${capitalize(tblName)}ListResponseDto })
-  list(@Body() filter: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
-    return this.${tblName}Service.list(filter);
+  @ApiResponse({ status: HttpStatus.OK, description: 'Response with list', type: ${snakeToCamel(tblName)}ListResponseDto })
+  list(@Body() filter: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
+    return this.${snakeToCamel(tblName, false)}Service.list(filter);
   }
 
   @Get(':id')
@@ -203,9 +203,9 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Response description', type: ${capitalize(tblName)}Dto })
-  get(@Param('id') id: number): Observable< ${capitalize(tblName)}Dto > {
-    return this.${tblName}Service.get(id);
+  @ApiResponse({ status: HttpStatus.OK, description: 'Response description', type: ${snakeToCamel(tblName)}Dto })
+  get(@Param('id') id: number): Observable< ${snakeToCamel(tblName)}Dto > {
+    return this.${snakeToCamel(tblName, false)}Service.get(id);
   }
 
   @Post()
@@ -215,8 +215,8 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with id' })
-  add(@Body() ${tblName}: ${capitalize(tblName)}Dto) {
-    return this.${tblName}Service.save(${tblName});
+  add(@Body() ${snakeToCamel(tblName, false)}: ${capitalize(snakeToCamel(tblName))}Dto) {
+    return this.${snakeToCamel(tblName, false)}Service.save(${snakeToCamel(tblName, false)});
   }
 
   @Delete(':id')
@@ -227,11 +227,11 @@ export class ${capitalize(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Deleted' })
   delete(@Param('id') id: number) {
-    return this.${tblName}Service.delete(id);
+    return this.${snakeToCamel(tblName, false)}Service.delete(id);
   }
 }
 `;
-  fs.writeFileSync(path.join('dist', 'api', tblName, `${tblName}.controller.ts`), tsController);
+  fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), `${snakeToDash(tblName)}.controller.ts`), tsController);
 }
 
 /**
@@ -243,27 +243,27 @@ function generateService(
 ) {
   let tsService = `import { HttpException, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { ${capitalize(tblName)}Dto } from './dto/${capitalize(tblName)}.dto';
-import { ${capitalize(tblName)}ListResponseDto } from './dto/${capitalize(tblName)}ListResponse.dto';
+import { ${snakeToCamel(tblName)}Dto } from './dto/${snakeToCamel(tblName)}.dto';
+import { ${snakeToCamel(tblName)}ListResponseDto } from './dto/${snakeToCamel(tblName)}ListResponse.dto';
 import { ListFilterRequestDto } from '../dto/ListFilterRequest.dto';
 import { DbService } from '../../shared/db/db.service';
 import { CustomLogger } from '../../shared/logger/custom-logger';
 
 @Injectable()
-export class ${capitalize(tblName)}Service {
+export class ${snakeToCamel(tblName)}Service {
   constructor(
     private db: DbService,
     private customLogger: CustomLogger,
   ) {
-    this.customLogger.setContext('${capitalize(tblName)} service');
+    this.customLogger.setContext('${snakeToCamel(tblName)} service');
   }
 `;
 
   tsService += `
-  list(filter: ListFilterRequestDto): Observable< ${capitalize(tblName)}ListResponseDto > {
-    return new Observable<${capitalize(tblName)}ListResponseDto>((observer) => {
-      this.db.query('SELECT ${schemaName}.${tblName}_list($1)', [filter]).subscribe(
-        (respSQL) => {
+  list(filter: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
+    return new Observable<${snakeToCamel(tblName)}ListResponseDto>((observer) => {
+      this.db.query('SELECT ${schemaName}.${tblName}_list($1)', [filter]).subscribe({
+        next: (respSQL) => {
           if (respSQL.error) {
             observer.error(new HttpException(respSQL.error, respSQL.code));
             return;
@@ -271,17 +271,17 @@ export class ${capitalize(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        (dbErr) => {
+        error: (dbErr) => {
           observer.error(dbErr);
         },
-      );
+      });
     });
   }
 
-  save(${tblName}: ${capitalize(tblName)}Dto): Observable<any> {
+  save(${snakeToCamel(tblName, false)}: ${snakeToCamel(tblName)}Dto): Observable<any> {
     return new Observable<any>((observer) => {
-      this.db.query('SELECT ${schemaName}.${tblName}_save($1)', [JSON.stringify(${tblName})]).subscribe(
-        (respSQL) => {
+      this.db.query('SELECT ${schemaName}.${tblName}_save($1)', [JSON.stringify(${snakeToCamel(tblName, false)})]).subscribe({
+        next: (respSQL) => {
           if (respSQL.error) {
             observer.error(new HttpException(respSQL.error, respSQL.code));
             return;
@@ -289,18 +289,18 @@ export class ${capitalize(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        (dbErr) => {
+        error: (dbErr) => {
           this.customLogger.error(dbErr);
           observer.error(dbErr);
         },
-      );
+      });
     });
   }
 
-  get(id: number): Observable<${capitalize(tblName)}Dto> {
+  get(id: number): Observable<${snakeToCamel(tblName)}Dto> {
     return new Observable((observer) => {
-      this.db.query('SELECT ${schemaName}.${tblName}_get($1)', [id]).subscribe(
-        (respSQL) => {
+      this.db.query('SELECT ${schemaName}.${tblName}_get($1)', [id]).subscribe({
+        next: (respSQL) => {
           if (respSQL.error) {
             observer.error(new HttpException(respSQL.error, respSQL.code));
             return;
@@ -308,18 +308,18 @@ export class ${capitalize(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        (dbErr) => {
+        error: (dbErr) => {
           this.customLogger.error(dbErr);
           observer.error(dbErr);
         },
-      );
+      });
     });
   }
 
   delete(id: number) {
     return new Observable((observer) => {
-      this.db.query('SELECT ${schemaName}.${tblName}_delete($1)', [id]).subscribe(
-        (respSQL) => {
+      this.db.query('SELECT ${schemaName}.${tblName}_delete($1)', [id]).subscribe({
+        next: (respSQL) => {
           if (respSQL.error) {
             observer.error(new HttpException(respSQL.error, respSQL.code));
             return;
@@ -327,16 +327,16 @@ export class ${capitalize(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        (dbErr) => {
+        error: (dbErr) => {
           this.customLogger.error(dbErr);
           observer.error(dbErr);
         },
-      );
+      });
     });
   }
 }
 `;
-  fs.writeFileSync(path.join('dist', 'api', tblName, `${tblName}.service.ts`), tsService);
+  fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), `${snakeToDash(tblName)}.service.ts`), tsService);
 }
 
 export function generateAPI(
@@ -345,8 +345,8 @@ export function generateAPI(
   fieldArray: FieldDefinition[],
 ) {
   // Create module directory
-  if (!fs.existsSync(path.join('dist', 'api', tblName, 'dto'))) {
-    fs.mkdirSync(path.join('dist', 'api', tblName, 'dto'), { recursive: true });
+  if (!fs.existsSync(path.join('dist', 'api', snakeToDash(tblName), 'dto'))) {
+    fs.mkdirSync(path.join('dist', 'api', snakeToDash(tblName), 'dto'), { recursive: true });
   }
   // Create global DTO directory
   if (!fs.existsSync(path.join('dist', 'api', 'dto'))) {

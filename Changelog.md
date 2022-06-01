@@ -1,6 +1,10 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.6.0 _2022-06-01_
+* Add: Support for snake case table name like CREATE TABLE invoice_items ...
+* Add: Support for RxJS subscribe arguments object notation (deprecation warning from RxJS 6.4)
+
 ## Version 0.5.1 _2022-02-20_
 * Fix: API - delete and save add information about HTML 404 NOT_FOUND response code
 * Fix: SQL - check if updated item exist, response with 404 error code

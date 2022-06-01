@@ -1,7 +1,24 @@
-import { FieldDefinition } from "./sql_to_fnc.interfaces";
+import { FieldDefinition } from './sql_to_fnc.interfaces';
 
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function snakeToCamel(str: string, capitalize: boolean = true): string {
+  let word = str;
+  if (capitalize) {
+    word = str.charAt(0).toUpperCase() + str.slice(1);
+  }
+  return word.replace(/([_][a-z])/g,
+    (group) =>
+      group
+      .toUpperCase()
+      .replace("_", "")
+  );
+}
+
+export function snakeToDash(str: string): string {
+  return str.toLowerCase().replace("_", "-");
 }
 
 export function isNumber(item: FieldDefinition): boolean {

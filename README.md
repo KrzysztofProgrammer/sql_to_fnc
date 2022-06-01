@@ -62,6 +62,8 @@ It will create files in dist/sql directory with functions :
 
 ## Generation NestJS REST API
 
+Using Node.js Style Guide from https://github.com/airbnb/javascript and https://github.com/felixge/node-style-guide 
+
 It will generate files:
 * dist/api/dto/FilterItem.dto.ts - global definition for filter item, used in ListFilterRequest 
 * dist/api/dto/ListFilterRequest.dto.ts - global definition request for list api
@@ -83,6 +85,8 @@ It will generate:
    * DELETE /user/{number} - delete added above data 
 
 ## Generation WWW CRUD Angular module
+
+Using Style Guide by https://angular.io/guide/styleguide
 
 It will generate:
 * dist/www/user.datasource.ts - needed for pagination by list.component.ts
