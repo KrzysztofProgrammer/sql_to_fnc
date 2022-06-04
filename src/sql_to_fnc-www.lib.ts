@@ -303,9 +303,9 @@ function generateFormField(item: FieldDefinition): string {
     return `      
       <mat-form-field class="full-width-input">
         <mat-label>TODO: ${item.description}</mat-label>
-        <input matInput formControlName="${item.field}" [matDatepicker]="picker${capitalize(item.field)}" placeholder="${datePlaceholder}"/>
-        <mat-datepicker-toggle matSuffix [for]="picker${item.field}"></mat-datepicker-toggle>
-        <mat-datepicker #picker${capitalize(item.field)}></mat-datepicker>
+        <input matInput formControlName="${item.field}" [matDatepicker]="picker${snakeToCamel(item.field)}" placeholder="${datePlaceholder}"/>
+        <mat-datepicker-toggle matSuffix [for]="picker${snakeToCamel(item.field)}"></mat-datepicker-toggle>
+        <mat-datepicker #picker${snakeToCamel(item.field)}></mat-datepicker>
         <mat-error></mat-error>
       </mat-form-field>`;
   }
