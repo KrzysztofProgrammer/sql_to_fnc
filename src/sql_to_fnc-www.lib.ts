@@ -399,19 +399,19 @@ export class ListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   // @ts-ignore
-  @ViewChild('search${capitalize(fieldArray[1].field)}Input') searchInput: ElementRef;
+  @ViewChild('search${capitalize(fieldArray[1].field)}Input') search${capitalize(fieldArray[1].field)}Input: ElementRef;
 
   dataSize: number = 0;
 
   constructor(
-    private ${tblName}Service: ${snakeToCamel(tblName)}Service,
+    private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
     private router: Router,
     public dialog: MatDialog,
     private alert: AlertService,
   ) { }
 
   ngOnInit(): void {
-    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${tblName}Service);
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service);
     this.listTable.cntSubject.subscribe(
       (cnt) => { this.dataSize = cnt; },
     );
@@ -439,7 +439,7 @@ export class ListComponent implements OnInit, AfterViewInit {
 
     merge(
       this.sort.sortChange,
-      this.paginator.page
+      this.paginator.page,
     ).pipe(
       tap(() => this.load()),
     ).subscribe();
@@ -447,11 +447,11 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   load() {
     // Check if elements are initialized
-    if ((!this.searchInput) || (!this.sort)) {
+    if ((!this.search${capitalize(fieldArray[1].field)}Input) || (!this.sort)) {
       return;
     }
     const filter = [];
-    if (this.searchImieInput?.nativeElement.value) {
+    if (this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value) {
       filter.push({
         field: '${fieldArray[1].field}',
         value: \`\${this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value}%\`,
@@ -479,7 +479,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     const dlg = this.dialog.open(DeleteDialogComponent, { data: { title: \`\${row.${fieldArray[1].field}}\` } });
     dlg.afterClosed().subscribe((result) => {
       if (!result) { return; }
-      this.${tblName}Service.delete(row.${fieldArray[0].field}).subscribe(
+      this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe(
         () => {
           this.alert.success('Item deleted');
           this.load();
