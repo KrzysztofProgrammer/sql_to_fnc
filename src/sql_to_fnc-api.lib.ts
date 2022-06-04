@@ -152,7 +152,7 @@ export class ${snakeToCamel(tblName)}ListResponseDto {
 
   @ApiProperty({
     description: 'Response item array',
-    type: [${snakeToCamel(tblName)}],
+    type: [${snakeToCamel(tblName)}Dto],
     example: [],
   })
   data: ${snakeToCamel(tblName)}Dto[];
