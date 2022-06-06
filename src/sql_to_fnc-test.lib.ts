@@ -165,7 +165,7 @@ testDataTs += '\n};\n'
 
 testDataTs += `export const ${snakeToCamel(tblName, false)}WrongItem : ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
   fieldArray.forEach((item) => {
-    testDataTs += `     ${item.field}: ${testData(item)},\n`;
+    testDataTs += `  ${item.field}: ${testData(item)},\n`;
   });
   testDataTs = testDataTs.slice(0, -2);
   testDataTs += '\n};\n'

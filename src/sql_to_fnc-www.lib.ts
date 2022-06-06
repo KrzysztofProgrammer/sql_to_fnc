@@ -156,6 +156,7 @@ export class ${snakeToCamel(tblName)}Datasource extends DataSource< ${snakeToCam
 
   constructor(
     private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
+    private alertService: AlertService,
   ) {
     super();
   }
@@ -164,17 +165,21 @@ export class ${snakeToCamel(tblName)}Datasource extends DataSource< ${snakeToCam
     this.loadingSubject.next(true);
     this.${snakeToCamel(tblName, false)}Service.list(filter)
       .pipe(
-        catchError(() => of([])),
+        catchError((err) => {
+          this.alertService.clear();
+          this.alertService.error(err.error.message);
+          return of([]);
+        }),
         finalize(() => this.loadingSubject.next(false)),
       )
-      .subscribe(
-        (items) => {
+      .subscribe({
+        next: (items) => {
           if ('data' in items) {
             this.cntSubject.next(items.cnt);
             this.${snakeToCamel(tblName, false)}Subject.next(items.data);
           }
         },
-      );
+      });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental
@@ -407,23 +412,24 @@ export class ListComponent implements OnInit, AfterViewInit {
     private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
     private router: Router,
     public dialog: MatDialog,
-    private alert: AlertService,
+    private alertService: AlertService,
   ) { }
 
   ngOnInit(): void {
-    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service);
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, alertService);
     this.listTable.cntSubject.subscribe(
       (cnt) => { this.dataSize = cnt; },
     );
     this.listTable.load({
       filter: [],
+      sort: [],
       page_size: 25,
       sort_direction: 'asc',
       page_index: 0,
     });
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.sort.sortChange.subscribe(() => { this.paginator.pageIndex = 0; });
 
     merge(
@@ -481,11 +487,11 @@ export class ListComponent implements OnInit, AfterViewInit {
       if (!result) { return; }
       this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe(
         () => {
-          this.alert.success('Item deleted');
+          this.alertService.success('Item deleted');
           this.load();
         },
         (error) => {
-          this.alert.error(error.error.message);
+          this.alertService.error(error.error.message);
         },
       );
     });

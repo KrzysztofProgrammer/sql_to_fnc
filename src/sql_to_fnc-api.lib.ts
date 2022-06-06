@@ -271,9 +271,7 @@ export class ${snakeToCamel(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        error: (dbErr) => {
-          observer.error(dbErr);
-        },
+        error: (dbErr) => observer.error(dbErr),
       });
     });
   }
@@ -289,10 +287,7 @@ export class ${snakeToCamel(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        error: (dbErr) => {
-          this.customLogger.error(dbErr);
-          observer.error(dbErr);
-        },
+        error: (dbErr) => observer.error(dbErr),
       });
     });
   }
@@ -308,10 +303,7 @@ export class ${snakeToCamel(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        error: (dbErr) => {
-          this.customLogger.error(dbErr);
-          observer.error(dbErr);
-        },
+        error: (dbErr) => observer.error(dbErr),
       });
     });
   }
@@ -327,10 +319,7 @@ export class ${snakeToCamel(tblName)}Service {
           observer.next(respSQL);
           observer.complete();
         },
-        error: (dbErr) => {
-          this.customLogger.error(dbErr);
-          observer.error(dbErr);
-        },
+        error: (dbErr) => observer.error(dbErr),
       });
     });
   }
