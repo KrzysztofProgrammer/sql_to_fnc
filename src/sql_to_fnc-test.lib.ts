@@ -172,7 +172,7 @@ testDataTs += `export const ${snakeToCamel(tblName, false)}WrongItem : ${capital
 
   testDataTs +=`export const ${snakeToCamel(tblName, false)}Filter: ListFilterRequestDto = {
   filter: [{ field: '${fieldArray[1].field}', value: '%' }],
-  page_index: 1,
+  page_index: 0,
   sort_direction: 'asc',
   sort: ['${fieldArray[1].field}'],
   page_size: 25,
