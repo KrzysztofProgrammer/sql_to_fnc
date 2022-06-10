@@ -25,11 +25,13 @@ function getFieldArray(arr: FieldDefinition[]): string {
       result += '"' + item.field + '"';
     }
   });
+
   return result;
 }
 
 function sqlData(elem: FieldDefinition): string {
   switch (elem.type) {
+    case 'BOOLEAN':
     case 'BOOL':
       return `COALESCE( cast( f_data->>'${elem.field}' as boolean), true)`;
     case 'DATE':
@@ -145,7 +147,7 @@ BEGIN
   f_p_offset = (f_request->>'page_index')::integer * f_p_size;
   f_order = f_request->>'sort_direction';
   IF (NOT ((f_order='asc') OR (f_order='desc') OR (f_order=''))) THEN
-    RETURN jsonb_build_object('error','Wrong order', 'code', '400');
+    RETURN jsonb_build_object('error','Wrong order', 'code', 400);
   END IF;
 
   f_sql_where = '';
@@ -153,7 +155,7 @@ BEGIN
     SELECT * FROM jsonb_array_elements( f_request->'filter' )
   LOOP
     IF NOT CAST(f_filter->>'field' as varchar) = ANY (f_field_array) THEN
-      RETURN jsonb_build_object('error','Wrong filter field');
+      RETURN jsonb_build_object('error','Wrong filter field', 'code', 400);
     END IF;
     f_sql_where = f_sql_where || ' AND upper(' || CAST(f_filter->>'field' as varchar) || ') LIKE ' || quote_literal(upper(f_filter->>'value'));
   END LOOP;
@@ -163,7 +165,7 @@ BEGIN
     SELECT * FROM jsonb_array_elements_text( f_request->'sort')
   LOOP
     IF NOT CAST(f_sort as varchar) = ANY (f_field_array) THEN
-      RETURN jsonb_build_object('error','Wrong sort field');
+      RETURN jsonb_build_object('error','Wrong sort field', 'code', 400);
     END IF;
     IF (f_sql_order = ''::varchar) THEN
       f_sql_order = f_sql_order || f_sort;
@@ -218,7 +220,7 @@ DECLARE
   f_data  jsonb;
 BEGIN
   f_data = a_data::jsonb;
-  f_id   = CAST( f_data->>'${fieldArray[0].field}' as INTEGER );
+  f_id   = COALESCE( CAST( f_data->>'${fieldArray[0].field}' as INTEGER ), 0);
 
   IF f_id > 0 THEN
       PERFORM 1 FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = a_id;
