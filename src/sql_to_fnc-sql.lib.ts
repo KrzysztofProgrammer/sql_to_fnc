@@ -139,9 +139,9 @@ DECLARE
   f_cnt       integer;
   f_sql_where varchar;
   f_sql_order varchar;
-  f_field_array varchar[];
+  f_valid_search_fields varchar[];
 BEGIN
-  f_field_array = '{${getFieldArray(fieldArray)}}'::varchar[];
+  f_valid_search_fields = '{${getFieldArray(fieldArray)}}'::varchar[];
   f_request = CAST(a_filter as jsonb);
   f_p_size = (f_request->>'page_size')::integer;
   f_p_offset = (f_request->>'page_index')::integer * f_p_size;
@@ -154,7 +154,7 @@ BEGIN
   FOR f_filter IN
     SELECT * FROM jsonb_array_elements( f_request->'filter' )
   LOOP
-    IF NOT CAST(f_filter->>'field' as varchar) = ANY (f_field_array) THEN
+    IF NOT CAST(f_filter->>'field' as varchar) = ANY (f_valid_search_fields) THEN
       RETURN jsonb_build_object('error','Wrong filter field', 'code', 400);
     END IF;
     f_sql_where = f_sql_where || ' AND upper(' || CAST(f_filter->>'field' as varchar) || ') LIKE ' || quote_literal(upper(f_filter->>'value'));
@@ -164,7 +164,7 @@ BEGIN
   FOR f_sort IN
     SELECT * FROM jsonb_array_elements_text( f_request->'sort')
   LOOP
-    IF NOT CAST(f_sort as varchar) = ANY (f_field_array) THEN
+    IF NOT CAST(f_sort as varchar) = ANY (f_valid_search_fields) THEN
       RETURN jsonb_build_object('error','Wrong sort field', 'code', 400);
     END IF;
     IF (f_sql_order = ''::varchar) THEN

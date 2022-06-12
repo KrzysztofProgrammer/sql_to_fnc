@@ -82,6 +82,26 @@ describe('${snakeToCamel(tblName)}', () => {
 
   describe('${snakeToCamel(tblName)} service', () => {
 
+    it('/${tblName} POST - save / update item',
+      (done) => request(app.getHttpServer())
+        .post('/${tblName}')
+        .set('Accept', 'application/json')
+        .set('Authorization', \`Bearer \${jwtToken}\`)
+        .send(${snakeToCamel(tblName, false)}ValidItem)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end((err, res) => {
+          // console.log(res.body);
+          expect(res.body).toBeDefined();
+          expect(res.body.id).toBeDefined();
+          // eslint-disable-next-line prefer-destructuring
+          newId = res.body.id;
+          if (err) {
+            return done(err);
+          }
+          return done();
+        }));
+
     it('/${tblName}/list',
       (done) => request(app.getHttpServer())
         .post('/${tblName}/list')
@@ -107,26 +127,6 @@ describe('${snakeToCamel(tblName)}', () => {
         .expect(200)
         .expect('Content-Type', /json/)
         .end(done));
-
-    it('/${tblName} POST - save / update item',
-      (done) => request(app.getHttpServer())
-        .post('/${tblName}')
-        .set('Accept', 'application/json')
-        .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send(${snakeToCamel(tblName, false)}ValidItem)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end((err, res) => {
-          // console.log(res.body);
-          expect(res.body).toBeDefined();
-          expect(res.body.id).toBeDefined();
-          // eslint-disable-next-line prefer-destructuring
-          newId = res.body.id;
-          if (err) {
-            return done(err);
-          }
-          return done();
-        }));
 
     it('/${tblName}/0 DELETE Wrong params',
       (done) => request(app.getHttpServer())
