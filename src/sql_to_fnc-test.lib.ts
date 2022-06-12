@@ -112,6 +112,7 @@ describe('${snakeToCamel(tblName)}', () => {
         .expect(200)
         .end((err, res) => {
           // expect(res.body).toHaveLength(1);
+          expect(res.body.data[0]).toBeDefined();
           // eslint-disable-next-line prefer-destructuring
           itemFromList = res.body.data[0];
           if (err) {
