@@ -78,7 +78,7 @@ export class FilterItemDto {
  */
 function generateListFilterRequestDto() {
   let tsItem =`import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 import { FilterItemDto } from './FilterItem.dto';
 
 export class ListFilterRequestDto {
@@ -100,7 +100,7 @@ export class ListFilterRequestDto {
   sort_direction: string;
   
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({
     description: 'Fields to be sorted',
     type: '[string]',
