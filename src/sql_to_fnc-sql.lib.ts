@@ -223,13 +223,14 @@ BEGIN
   f_id   = COALESCE( CAST( f_data->>'${fieldArray[0].field}' as INTEGER ), 0);
 
   IF f_id > 0 THEN
-      PERFORM 1 FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = a_id;
+      PERFORM 1 FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = f_id;
       IF NOT FOUND THEN
         RETURN jsonb_build_object('error', 'Item not exist', 'code', 404);
       END IF;
       UPDATE ${schemaName}.${tblName} SET \n`;
 
   fieldArray.forEach((item) => {
+    if (item.field === fieldArray[0].field) { return; }
     sqlSave += `            ${item.field} = ${sqlData(item)},\n`;
   });
   sqlSave = sqlSave.slice(0, -2);
@@ -245,7 +246,7 @@ ${getFunctionList(fieldArray)}
   let insertArray = JSON.parse(JSON.stringify(fieldArray));
   insertArray.shift()
   insertArray.forEach((item) => {
-    sqlSave += `      ${sqlData(item)},\n`;
+    sqlSave += `          ${sqlData(item)},\n`;
   });
   sqlSave = sqlSave.slice(0, -2);
   sqlSave += `
