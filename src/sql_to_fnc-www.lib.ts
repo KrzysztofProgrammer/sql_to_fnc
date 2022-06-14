@@ -235,6 +235,8 @@ export class EditComponent {
     ts += `      ${item.field}: [`;
     if (isNumber(item)) {
       ts += '0';
+    } else if (isBoolean(item)) {
+      ts += 'true';
     } else {
       ts += '\'\'';
     }

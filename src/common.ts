@@ -36,7 +36,7 @@ export function isString(item: FieldDefinition): boolean {
 }
 
 export function isBoolean(item: FieldDefinition): boolean {
-  if (['BOOL'].indexOf(item.type.toUpperCase()) >= 0) {
+  if (['BOOL', 'BOOLEAN'].indexOf(item.type.toUpperCase()) >= 0) {
     return true;
   }
   return false;
