@@ -38,12 +38,11 @@ export function generateTestE2E(
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
-import { 
+import {
   ${snakeToCamel(tblName, false)}Filter,
   ${snakeToCamel(tblName, false)}ValidItem,
   ${snakeToCamel(tblName, false)}WrongItem,
 } from './data/${snakeToDash(tblName)}.data';
-
 
 describe('${snakeToCamel(tblName)}', () => {
   let app: INestApplication;
@@ -54,8 +53,7 @@ describe('${snakeToCamel(tblName)}', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    })
-    .compile();
+    }).compile();
 
     app = moduleRef.createNestApplication();
     await app.init();
@@ -81,7 +79,6 @@ describe('${snakeToCamel(tblName)}', () => {
   });
 
   describe('${snakeToCamel(tblName)} service', () => {
-
     it('/${tblName} POST - save / update item',
       (done) => request(app.getHttpServer())
         .post('/${tblName}')
