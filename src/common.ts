@@ -22,7 +22,7 @@ export function snakeToDash(str: string): string {
 }
 
 export function isNumber(item: FieldDefinition): boolean {
-  if (['INT4', 'INT8', 'INTEGER'].indexOf(item.type.toUpperCase()) >= 0) {
+  if (['INT4', 'INT8', 'INTEGER', 'INT'].indexOf(item.type.toUpperCase()) >= 0) {
     return true;
   }
   return false;

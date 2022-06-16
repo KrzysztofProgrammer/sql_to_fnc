@@ -177,7 +177,7 @@ BEGIN
     f_sql_order = ' ORDER BY ' || f_sql_order || ' ' || f_order;
   END IF;
 
-   f_sql = format('SELECT COALESCE(to_jsonb(array_agg( u )),'[]'::jsonb) FROM (
+   f_sql = format('SELECT COALESCE(to_jsonb(array_agg( u )),''[]''::jsonb) FROM (
     SELECT
 ${getFunctionList(fieldArray)}
     FROM ${schemaName}.${tblName}
