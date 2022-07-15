@@ -342,7 +342,8 @@ function generateEditHtml(
     ts += generateFormField(item);
   });
 
-  ts += ` </form>
+  ts += `
+    </form>
   </mat-card-content>
 
   <mat-card-footer>
