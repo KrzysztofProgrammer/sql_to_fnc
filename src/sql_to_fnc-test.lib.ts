@@ -134,7 +134,7 @@ describe('${snakeToCamel(tblName)}', () => {
         .expect(404)
         .expect('Content-Type', /json/)
         .end(done));
-   
+
     it('/${tblName}/number DELETE',
       (done) => request(app.getHttpServer())
         .delete(\`/${tblName}/\${newId}\`)
@@ -144,10 +144,10 @@ describe('${snakeToCamel(tblName)}', () => {
         .expect('Content-Type', /json/)
         .end(done));
 
-     // TODO: Add more tests for invalid inputs, save and update
+    // TODO: Add more tests for invalid inputs, save and update
   });
 });
-  `;
+`;
   fs.writeFileSync(path.join('dist','tests',`${snakeToDash(tblName)}.e2e-spec.ts`), testTs);
 
 
@@ -156,16 +156,16 @@ describe('${snakeToCamel(tblName)}', () => {
    */
   let testDataTs = `export const ${snakeToCamel(tblName, false)}ValidItem: ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
 fieldArray.forEach((item) => {
-  testDataTs += `     ${item.field}: ${testData(item)},\n`;
+  testDataTs += `  ${item.field}: ${testData(item)},\n`;
 });
-  testDataTs = testDataTs.slice(0, -2);
+  testDataTs = testDataTs.slice(0, -1);
 testDataTs += '\n};\n'
 
 testDataTs += `export const ${snakeToCamel(tblName, false)}WrongItem : ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
   fieldArray.forEach((item) => {
     testDataTs += `  ${item.field}: ${testData(item)},\n`;
   });
-  testDataTs = testDataTs.slice(0, -2);
+  testDataTs = testDataTs.slice(0, -1);
   testDataTs += '\n};\n'
 
   testDataTs +=`export const ${snakeToCamel(tblName, false)}Filter: ListFilterRequestDto = {

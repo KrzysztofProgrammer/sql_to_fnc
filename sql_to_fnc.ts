@@ -24,7 +24,7 @@ if (path.extname(args[0]).toUpperCase() !== '.SQL') {
 }
 
 const sqlFile = fs.readFileSync(args[0], {
-  encoding: 'ascii',
+  encoding: 'utf8',
 });
 
 /**

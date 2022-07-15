@@ -418,7 +418,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, alertService);
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
     this.listTable.cntSubject.subscribe(
       (cnt) => { this.dataSize = cnt; },
     );
@@ -487,15 +487,15 @@ export class ListComponent implements OnInit, AfterViewInit {
     const dlg = this.dialog.open(DeleteDialogComponent, { data: { title: \`\${row.${fieldArray[1].field}}\` } });
     dlg.afterClosed().subscribe((result) => {
       if (!result) { return; }
-      this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe(
-        () => {
+      this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe({
+        next: () => {
           this.alertService.success('Item deleted');
           this.load();
         },
-        (error) => {
+        error: (error) => {
           this.alertService.error(error.error.message);
         },
-      );
+      });
     });
   }
 }
