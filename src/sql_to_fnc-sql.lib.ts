@@ -140,6 +140,7 @@ DECLARE
   f_sql_where varchar;
   f_sql_order varchar;
   f_valid_search_fields varchar[];
+  f_filter_field_type varchar;
 BEGIN
   f_valid_search_fields = '{${getFieldArray(fieldArray)}}'::varchar[];
   f_request = CAST(a_filter as jsonb);
@@ -157,7 +158,19 @@ BEGIN
     IF NOT CAST(f_filter->>'field' as varchar) = ANY (f_valid_search_fields) THEN
       RETURN jsonb_build_object('error','Wrong filter field', 'code', 400);
     END IF;
-    f_sql_where = f_sql_where || ' AND upper(' || CAST(f_filter->>'field' as varchar) || ') LIKE ' || quote_literal(upper(f_filter->>'value'));
+    SELECT data_type
+      INTO f_filter_field_type
+      FROM information_schema.columns
+     WHERE table_name = '${tblName}'
+       AND table_schema = '${schemaName}'
+       AND column_name = CAST(f_filter->>'field' as varchar);
+    IF f_filter_field_type = 'character varying' THEN
+      f_sql_where = f_sql_where || ' AND upper(' || CAST(f_filter->>'field' as varchar) || ') LIKE ' || quote_literal(upper(f_filter->>'value'));
+    ELSEIF f_filter_field_type = 'boolean' THEN
+      f_sql_where = f_sql_where || ' AND ' || CAST(f_filter->>'field' as varchar) || ' = ' || CAST(f_filter->>'value' as varchar);
+    ELSE
+      RETURN jsonb_build_object('error','Wrong filter field type', 'code', 400);
+    END IF;
   END LOOP;
 
   f_sql_order = '';
