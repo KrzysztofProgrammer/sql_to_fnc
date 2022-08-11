@@ -103,18 +103,21 @@ export class ListFilterRequestDto {
   @IsOptional()
   @ApiProperty({
     description: 'Fields to be sorted',
-    type: '[string]',
+    type: 'array',
+    items: {
+      type: 'string',
+    },
     example: '[\\'name\\', \\'surname\\']',
     required: false,
   })
-  sort: string[];
+  sort?: string[];
   
   @IsNotEmpty()
   @IsNumber()
   @ApiProperty({
     description: 'Page index',
     type: 'number',
-    example: '1',
+    example: 1,
   })
   page_index: number;
   
