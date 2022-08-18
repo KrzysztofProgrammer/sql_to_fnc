@@ -63,9 +63,8 @@ describe('${snakeToCamel(tblName)}', () => {
     await app.close();
   });
 
-  beforeEach(async (done) => {
+  beforeEach(async () => {
     if (jwtToken) {
-      done();
       return;
     }
     // TODO: Authorization jwtoken inquire
@@ -75,76 +74,78 @@ describe('${snakeToCamel(tblName)}', () => {
       .expect(200);
     jwtToken = response.body.access_token;
     expect(jwtToken).toMatch(/^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$/); // jwt regex
-    done();
   });
 
   describe('${snakeToCamel(tblName)} service', () => {
     it('/${tblName} POST - save / update item',
-      (done) => request(app.getHttpServer())
-        .post('/${tblName}')
-        .set('Accept', 'application/json')
-        .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send(${snakeToCamel(tblName, false)}ValidItem)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end((err, res) => {
-          // console.log(res.body);
-          expect(res.body).toBeDefined();
-          expect(res.body.id).toBeDefined();
-          // eslint-disable-next-line prefer-destructuring
-          newId = res.body.id;
-          if (err) {
-            return done(err);
-          }
-          return done();
-        }));
+      (done) => {
+        request(app.getHttpServer())
+          .post('/${tblName}')
+          .set('Accept', 'application/json')
+          .set('Authorization', \`Bearer \${jwtToken}\`)
+          .send(${snakeToCamel(tblName, false)}ValidItem)
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end((err, res) => {
+            // console.log(res.body);
+            expect(res.body).toBeDefined();
+            expect(res.body.id).toBeDefined();
+            // eslint-disable-next-line prefer-destructuring
+            newId = res.body.id;
+            if (err) {
+              done(err);
+              return;
+            }
+            done();
+          });
+      });
 
     it('/${tblName}/list',
-      (done) => request(app.getHttpServer())
-        .post('/${tblName}/list')
-        .set('Accept', 'application/json')
-        .set('Authorization', \`Bearer \${jwtToken}\`)
-        .send(${snakeToCamel(tblName, false)}Filter)
-        .expect('Content-Type', /json/)
-        .expect(200)
-        .end((err, res) => {
-          // expect(res.body).toHaveLength(1);
-          expect(res.body.data[0]).toBeDefined();
-          // eslint-disable-next-line prefer-destructuring
-          itemFromList = res.body.data[0];
-          if (err) {
-            return done(err);
-          }
-          return done();
-        }));
+      (done) => { 
+        request(app.getHttpServer())
+          .post('/${tblName}/list')
+          .set('Accept', 'application/json')
+          .set('Authorization', \`Bearer \${jwtToken}\`)
+          .send(${snakeToCamel(tblName, false)}Filter)
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end((err, res) => {
+            // expect(res.body).toHaveLength(1);
+            expect(res.body.data[0]).toBeDefined();
+            // eslint-disable-next-line prefer-destructuring
+            itemFromList = res.body.data[0];
+            if (err) {
+              done(err);
+              return;
+            }
+            done();
+          });
+      });
 
     it('/${tblName}/number GET first item description',
-      (done) => request(app.getHttpServer())
+      () => request(app.getHttpServer())
         .get(\`/${tblName}/\${itemFromList.${fieldArray[0].field}}\`)
         .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(200)
-        .expect('Content-Type', /json/)
-        .end(done));
+        .expect('Content-Type', /json/));
 
     it('/${tblName}/0 DELETE Wrong params',
-      (done) => request(app.getHttpServer())
+      () => request(app.getHttpServer())
         .delete('/${tblName}/0')
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(404)
-        .expect('Content-Type', /json/)
-        .end(done));
+        .expect('Content-Type', /json/));
 
     it('/${tblName}/number DELETE',
-      (done) => request(app.getHttpServer())
+      () => request(app.getHttpServer())
         .delete(\`/${tblName}/\${newId}\`)
         .set('Accept', 'application/json')
         .set('Authorization', \`Bearer \${jwtToken}\`)
         .expect(200)
-        .expect('Content-Type', /json/)
-        .end(done));
+        .expect('Content-Type', /json/));
 
-    // TODO: Add more tests for invalid inputs, save and update
+    it.todo('Add more tests for invalid inputs, save and update');
   });
 });
 `;

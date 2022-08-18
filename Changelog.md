@@ -1,6 +1,9 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.7.0 _2022-08-18_
+* Fix: Upgrade JEST from 26.X to 28.X introduce breaking changes - need some code change
+
 ## Version 0.6.0 _2022-06-01_
 * Add: Support for snake case table name like CREATE TABLE invoice_items ...
 * Add: Support for RxJS subscribe arguments object notation (deprecation warning from RxJS 6.4)
