@@ -1,5 +1,10 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
+## Version 0.7.1 _2022-08-22_
+* Library upgrade causes small fix - missing type definition
+* Add linux run in package.json
+* Move out getting authorization token from specified tests to common test utils directory
+* Handle error during deletion. If not possible - will return code 403 and information "Cannot delete item" 
 
 ## Version 0.7.0 _2022-08-18_
 * Fix: Upgrade JEST from 26.X to 28.X introduce breaking changes - need some code change

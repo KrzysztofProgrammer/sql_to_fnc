@@ -10,11 +10,11 @@ Comments on table column is used for API description and labels for edits.
 Of course, this will not meet in 100% yours needs, but will speed up your development time.
 
 ## Usage
-! Important ! Before usage please change inside sql_to_fnc.constants.ts database user name.
+! Important ! Before usage please change inside sql_to_fnc.constants.ts database username.
 
 *Linux usage:*
 ```
-node .\sql_to_fnc.ts .\table.example.sql
+ts-node .\sql_to_fnc.ts .\table.example.sql
 ```
 
 *Windows usage:*

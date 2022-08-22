@@ -99,9 +99,11 @@ BEGIN
   IF NOT FOUND THEN
     RETURN jsonb_build_object('error', 'Item not exist', 'code', 404);
   END IF;
-
-  DELETE FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = a_id;
-
+  BEGIN
+    DELETE FROM ${schemaName}.${tblName} WHERE ${fieldArray[0].field} = a_id;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('error', 'Cannot delete item', 'code', 403);
+  END;
   RETURN jsonb_build_object('code', 202 );
 END;
 $BODY$
@@ -256,7 +258,7 @@ ${getFunctionList(fieldArray)}
       ) VALUES (
           f_id,\n`;
   // Copy and remove first element (id), already filled as f_id
-  let insertArray = JSON.parse(JSON.stringify(fieldArray));
+  let insertArray: FieldDefinition[] = JSON.parse(JSON.stringify(fieldArray));
   insertArray.shift()
   insertArray.forEach((item) => {
     sqlSave += `          ${sqlData(item)},\n`;
