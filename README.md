@@ -14,7 +14,7 @@ Of course, this will not meet in 100% yours needs, but will speed up your develo
 
 *Linux usage:*
 ```
-ts-node .\sql_to_fnc.ts .\table.example.sql
+ts-node sql_to_fnc.ts table.example.sql
 ```
 
 *Windows usage:*
@@ -80,7 +80,8 @@ It will generate:
 * dist/tests/user.e2e-spec.ts - contain supertest template with test cases:
    * POST /user/list - with filter data, get first element from list and use it
    * GET /user/{number} - use above data for fetch item
-   * POST /user  - save valid data
+   * POST /user  - save new item with valid data
+   * POST /user  - update item with valid data
    * DELETE /user/0 - check wrong data
    * DELETE /user/{number} - delete added above data 
 
