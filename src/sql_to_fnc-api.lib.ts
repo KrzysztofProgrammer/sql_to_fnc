@@ -218,7 +218,7 @@ export class ${snakeToCamel(tblName)}Controller {
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with id' })
-  add(@Body() ${snakeToCamel(tblName, false)}: ${capitalize(snakeToCamel(tblName))}Dto) {
+  save(@Body() ${snakeToCamel(tblName, false)}: ${capitalize(snakeToCamel(tblName))}Dto) {
     return this.${snakeToCamel(tblName, false)}Service.save(${snakeToCamel(tblName, false)});
   }
 
