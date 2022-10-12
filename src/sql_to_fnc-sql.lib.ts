@@ -141,6 +141,7 @@ DECLARE
   f_cnt       integer;
   f_sql_where varchar;
   f_sql_order varchar;
+  f_sql_cnt   varchar;
   f_valid_search_fields varchar[];
   f_filter_field_type varchar;
 BEGIN
@@ -202,7 +203,8 @@ ${getFunctionList(fieldArray)}
     OFFSET $2
   ) as u', f_sql_where, f_sql_order);
   EXECUTE f_sql INTO f_result USING f_p_size, f_p_offset;
-  SELECT count(*) FROM ${schemaName}.${tblName} INTO f_cnt;
+  f_sql_cnt = format('SELECT count(*) FROM ${schemaName}.${tblName} WHERE TRUE %s', f_sql_where);
+  EXECUTE f_sql_cnt INTO f_cnt;
   RETURN jsonb_build_object('data', f_result, 'cnt', f_cnt);
 END;
 $BODY$

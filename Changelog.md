@@ -1,5 +1,11 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
+
+## Version 0.7.3 _2022-10-06_
+* Filter on list page will be remembered
+* Pagination have on last position length value of table
+* SQL Fix - list will return count of filtered query 
+
 ## Version 0.7.1 _2022-08-22_
 * Library upgrade causes small fix - missing type definition
 * Add linux run in package.json

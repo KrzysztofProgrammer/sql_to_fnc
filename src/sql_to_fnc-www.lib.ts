@@ -108,6 +108,14 @@ export class ${snakeToCamel(tblName)}Service {
     const conf = new Configuration();
     this.api${snakeToCamel(tblName)}Service = new Api${snakeToCamel(tblName)}Service(this.httpClient, basePath, conf);
   }
+  
+  public savedFilter: ListFilterRequestDto = {
+    filter: [],
+    sort: [],
+    page_size: 25,
+    sort_direction: 'asc',
+    page_index: 0,
+  };
 
   public list(body: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
     return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerList(body);
@@ -161,9 +169,12 @@ export class ${snakeToCamel(tblName)}Datasource extends DataSource< ${snakeToCam
     super();
   }
 
-  load(filter: ListFilterRequestDto) {
+  load(filter?: ListFilterRequestDto) {
     this.loadingSubject.next(true);
-    this.${snakeToCamel(tblName, false)}Service.list(filter)
+    if (filter) {
+      this.${snakeToCamel(tblName, false)}Service.savedFilter = filter;
+    }
+    this.${snakeToCamel(tblName, false)}Service.list(this.${snakeToCamel(tblName, false)}Service.savedFilter)
       .pipe(
         catchError((err) => {
           this.alertService.clear();
@@ -367,12 +378,13 @@ function generateListTs(
   let ts = `import {
   AfterViewInit, Component, ElementRef, OnInit, ViewChild,
 } from '@angular/core';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, SortDirection } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { fromEvent, merge } from 'rxjs';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.component';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.service';
@@ -405,35 +417,68 @@ export class ListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
-  // @ts-ignore
-  @ViewChild('search${capitalize(fieldArray[1].field)}Input') search${capitalize(fieldArray[1].field)}Input: ElementRef;
+  
+  searchForm: FormGroup;
 
   dataSize: number = 0;
+  
+  pageSizeOpt: number[] = [25, 50, 100];
+  
+  public filter: {
+    pageSize: number;
+    pageIndex: number;
+    sortActive: string;
+    sortDirection: SortDirection;
+  } = {
+      pageSize: 25,
+      pageIndex: 0,
+      sortActive: '',
+      sortDirection: 'asc',
+    };
 
   constructor(
     private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
     private router: Router,
     public dialog: MatDialog,
     private alertService: AlertService,
-  ) { }
-
-  ngOnInit(): void {
-    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
-    this.listTable.cntSubject.subscribe(
-      (cnt) => { this.dataSize = cnt; },
-    );
-    this.listTable.load({
-      filter: [],
-      sort: [],
-      page_size: 25,
-      sort_direction: 'asc',
-      page_index: 0,
+    private fb: FormBuilder,
+  ) {
+    let in${capitalize(fieldArray[1].field)} = this.${snakeToCamel(tblName, false)}Service.savedFilter.filter?.find((item) => item.field === '${fieldArray[1].field}')?.value;
+    if ( !in${capitalize(fieldArray[1].field)} ) {
+      in${capitalize(fieldArray[1].field)} = '';
+    }
+    this.searchForm = this.fb.group({
+      in${capitalize(fieldArray[1].field)}: [in${capitalize(fieldArray[1].field)}],      
     });
   }
 
+  ngOnInit(): void {
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
+    this.listTable.cntSubject.subscribe({
+       next: (cnt) => {
+        this.dataSize = cnt;
+        this.pageSizeOpt = [25, 50, cnt]; 
+       },
+    });
+    if (this.${snakeToCamel(tblName, false)}Service.savedFilter) {
+      this.filter.pageIndex = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_index;
+      this.filter.pageSize = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_size;
+      this.filter.sortDirection = this.${snakeToCamel(tblName, false)}Service.savedFilter.sort_direction;
+      if (this.${snakeToCamel(tblName, false)}Service.savedFilter.sort) {
+        this.filter.sortActive = this.${snakeToCamel(tblName, false)}Service.savedFilter.sort[0];
+      }
+    }
+    this.listTable.load();
+  }
+
   ngAfterViewInit(): void {
-    this.sort.sortChange.subscribe(() => { this.paginator.pageIndex = 0; });
+    this.sort.sortChange.subscribe({
+      next: (sort) => {
+       this.filter.sortDirection = sort.direction;
+       this.filter.sortActive = sort.active;
+       this.paginator.pageIndex = 0; 
+      }
+    });
 
     merge(
       fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
@@ -467,8 +512,8 @@ export class ListComponent implements OnInit, AfterViewInit {
       });
     }
     const sort = [];
-    if (this.sort.active) {
-      sort.push(this.sort.active);
+    if (this.filter.sortActive) {
+      sort.push(this.filter.sortActive);
     }
 
     this.listTable?.load({
@@ -476,7 +521,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       sort,
       page_index: this.paginator?.pageIndex,
       page_size: this.paginator?.pageSize,
-      sort_direction: this.sort?.direction,
+      sort_direction: this.filter.sortDirection,
     });
   }
 
@@ -555,7 +600,8 @@ function generateListHtml(
 ) {
   let ts = `<mat-card class="mat-elevation-z4">
   <mat-card-content>
-    <div class="flex-container">
+    <form [formGroup]="searchForm">
+      <div class="flex-container">
       <div>
         List
       </div>
@@ -565,11 +611,12 @@ function generateListHtml(
           Add
         </button>
         <mat-form-field class="header-item">
-          <mat-label>Search</mat-label>
-          <input matInput placeholder="Search field" #search${capitalize(fieldArray[1].field)}Input>
+          <mat-label>Search ${fieldArray[1].field}</mat-label>
+          <input matInput placeholder="Search field" formControlName="in${capitalize(fieldArray[1].field)}">
         </mat-form-field>
       </div>
     </div>
+    </form>
   </mat-card-content>
 </mat-card>
 
@@ -614,8 +661,9 @@ ts += `      <ng-container matColumnDef="actions" stickyEnd>
     </table>
 
     <mat-paginator
-      [pageSizeOptions]="[25, 50]"
-      [pageSize]="25"
+      [pageSizeOptions]="pageSizeOpt"
+      [pageSize]="filter.pageSize"
+      [pageIndex]="filter.pageIndex"
       [length]="dataSize"
       showFirstLastButtons
       aria-label="Choose page">
