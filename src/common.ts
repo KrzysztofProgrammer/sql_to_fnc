@@ -4,21 +4,21 @@ export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function snakeToCamel(str: string, capitalize: boolean = true): string {
+export function snakeToCamel(str: string, setCapitalize: boolean = true): string {
   let word = str;
-  if (capitalize) {
+  if (setCapitalize) {
     word = str.charAt(0).toUpperCase() + str.slice(1);
   }
   return word.replace(/([_][a-z])/g,
     (group) =>
       group
-      .toUpperCase()
-      .replace("_", "")
+        .toUpperCase()
+        .replace('_', ''),
   );
 }
 
 export function snakeToDash(str: string): string {
-  return str.toLowerCase().replace("_", "-");
+  return str.toLowerCase().replace('_', '-');
 }
 
 export function isNumber(item: FieldDefinition): boolean {
@@ -69,7 +69,7 @@ export function getDescription(tblName: string, fieldName: string, sqlFileConten
     if (elems[3].toUpperCase().indexOf(`${tblName.toUpperCase()}.${fieldName.toUpperCase()}`) === -1) {
       return;
     }
-    const descArr = line.trim().split(`'`);
+    const descArr = line.trim().split('\'');
     response = descArr[1];
     return;
   });

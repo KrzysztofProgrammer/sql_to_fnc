@@ -6,18 +6,18 @@ import { capitalize, snakeToCamel, snakeToDash } from './common';
 function testData(elem: FieldDefinition): string {
   switch (elem.type) {
     case 'BOOL':
-      return `true`;
+      return 'true';
     case 'DATE':
     case 'TIMESTAMPTZ':
     case 'TIMESTAMP':
     case 'INT4':
     case 'INT8':
     case 'INTEGER':
-      return `0`;
+      return '0';
     case 'VARCHAR':
     case 'BPCHAR':
     default:
-      return `''`;
+      return '\'\'';
   }
 }
 
@@ -26,23 +26,23 @@ function testData(elem: FieldDefinition): string {
  */
 function generateTestData(tblName: string, fieldArray: FieldDefinition[]) {
   if (!fs.existsSync(path.join('dist', 'tests', 'data'))) {
-    fs.mkdirSync(path.join('dist', 'tests', 'data'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'tests', 'data'), { recursive: true });
   }
   let testDataTs = `export const ${snakeToCamel(tblName, false)}ValidItem: ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
   fieldArray.forEach((item) => {
     testDataTs += `  ${item.field}: ${testData(item)},\n`;
   });
   testDataTs = testDataTs.slice(0, -1);
-  testDataTs += '\n};\n'
+  testDataTs += '\n};\n';
 
   testDataTs += `export const ${snakeToCamel(tblName, false)}WrongItem : ${capitalize(snakeToCamel(tblName))}Dto = {\n`;
   fieldArray.forEach((item) => {
     testDataTs += `  ${item.field}: ${testData(item)},\n`;
   });
   testDataTs = testDataTs.slice(0, -1);
-  testDataTs += '\n};\n'
+  testDataTs += '\n};\n';
 
-  testDataTs +=`export const ${snakeToCamel(tblName, false)}Filter: ListFilterRequestDto = {
+  testDataTs += `export const ${snakeToCamel(tblName, false)}Filter: ListFilterRequestDto = {
   filter: [{ field: '${fieldArray[1].field}', value: '%' }],
   page_index: 0,
   sort_direction: 'asc',
@@ -50,12 +50,12 @@ function generateTestData(tblName: string, fieldArray: FieldDefinition[]) {
   page_size: 25,
 }`;
 
-  fs.writeFileSync(path.join('dist','tests','data',`${snakeToDash(tblName)}.data.ts`), testDataTs);
+  fs.writeFileSync(path.join('dist', 'tests', 'data', `${snakeToDash(tblName)}.data.ts`), testDataTs);
 }
 
 function generateHelpers() {
   if (!fs.existsSync(path.join('dist', 'tests', 'utils'))) {
-    fs.mkdirSync(path.join('dist', 'tests', 'utils'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'tests', 'utils'), { recursive: true });
   }
   let txt = `
 let jwtToken;
@@ -77,7 +77,7 @@ export async function getToken() {
     return jwtToken;
 }
   `;
-  fs.writeFileSync(path.join('dist','tests','utils','get-token.ts'), txt);
+  fs.writeFileSync(path.join('dist', 'tests', 'utils', 'get-token.ts'), txt);
 }
 
 export function generateTestE2E(
@@ -86,7 +86,7 @@ export function generateTestE2E(
   fieldArray: FieldDefinition[],
 ) {
   if (!fs.existsSync(path.join('dist', 'tests'))) {
-    fs.mkdirSync(path.join('dist', 'tests'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'tests'), { recursive: true });
   }
 
 
@@ -219,7 +219,7 @@ describe('${snakeToCamel(tblName)}', () => {
   });
 });
 `;
-  fs.writeFileSync(path.join('dist','tests',`${snakeToDash(tblName)}.e2e-spec.ts`), testTs);
+  fs.writeFileSync(path.join('dist', 'tests', `${snakeToDash(tblName)}.e2e-spec.ts`), testTs);
 
   generateTestData(tblName, fieldArray);
 

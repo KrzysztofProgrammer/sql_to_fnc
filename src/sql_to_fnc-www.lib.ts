@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from "./common";
+import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from './common';
 import { datePlaceholder } from '../sql_to_fnc.constans';
 
 /**
@@ -117,6 +117,14 @@ export class ${snakeToCamel(tblName)}Service {
     page_index: 0,
   };
 
+  public getFilterValue(fieldName: string): string {
+    let result = this.savedFilter.filter?.find((item) => item.field === fieldName)?.value;
+    if ( !result ) {
+      result = '';
+    }
+    return result;
+  }
+
   public list(body: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
     return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerList(body);
   }
@@ -219,7 +227,7 @@ function generateEditTs(
   let ts = `import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { filter, takeUntil } from 'rxjs/operators';
-import { Subject } from "rxjs";
+import { Subject } from 'rxjs';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Dto } from '../../api';
@@ -254,14 +262,14 @@ export class EditComponent implements OnDestroy {
     } else {
       ts += '\'\'';
     }
-    if (item.notNull) { ts += ', Validators.required'}
+    if (item.notNull) { ts += ', Validators.required';}
     ts += '],\n';
   });
-ts += `    });
+  ts += `    });
     this.route.params
       .pipe(
         takeUntil(this.destroy$),
-        filter((params) => params.id)
+        filter((params) => params.id),
       )
       .subscribe((params) => {
         if (params.id.toString() === '0') { return; }
@@ -289,15 +297,15 @@ ts += `    });
       return;
     }
     this.${snakeToCamel(tblName, false)}Service.save(this.form.value)
-       .pipe(takeUntil(this.destroy$))
-       .subscribe({
-          next: () => {
-            this.router.navigate(['/${tblName}/list']).then();
-          },
-          error: (error) => {
-            this.alert.error(error.error.message);
-          },
-        });
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/${tblName}/list']).then();
+        },
+        error: (error) => {
+          this.alert.error(error.error.message);
+        },
+      });
   }
 
   close() {
@@ -389,19 +397,19 @@ function generateListTs(
   fieldArray: FieldDefinition[],
 ) {
   let ts = `import {
-  AfterViewInit, Component, ElementRef, OnInit, ViewChild, OnDestroy
+  AfterViewInit, Component, OnInit, ViewChild, OnDestroy
 } from '@angular/core';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { fromEvent, merge } from 'rxjs';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { merge, Subject, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, tap, takeUntil } from 'rxjs/operators';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.component';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.service';
-import { ${snakeToCamel(tblName)}Dto } from '../../api';
+import { ${snakeToCamel(tblName)}Dto, FilterItemDto } from '../../api';
 import { ${snakeToCamel(tblName)}Datasource } from '../${snakeToDash(tblName)}.datasource';
 
 /**
@@ -422,7 +430,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   // TODO: Remove unnecessary columns, (leave actions)
   displayedColumns = [`;
   fieldArray.forEach((item) => {
-    ts += `'${item.field}', `
+    ts += `'${item.field}', `;
   });
   ts += ` 'actions'];
 
@@ -458,12 +466,8 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     private alertService: AlertService,
     private fb: FormBuilder,
   ) {
-    let in${capitalize(fieldArray[1].field)} = this.${snakeToCamel(tblName, false)}Service.savedFilter.filter?.find((item) => item.field === '${fieldArray[1].field}')?.value;
-    if ( !in${capitalize(fieldArray[1].field)} ) {
-      in${capitalize(fieldArray[1].field)} = '';
-    }
     this.searchForm = this.fb.group({
-      in${capitalize(fieldArray[1].field)}: [in${capitalize(fieldArray[1].field)}],      
+      in${capitalize(fieldArray[1].field)}: [this.${snakeToCamel(tblName, false)}Service.getFilterValue('${fieldArray[1].field}')],
     });
   }
 
@@ -472,11 +476,11 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.listTable.cntSubject
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-       next: (cnt) => {
-        this.dataSize = cnt;
-        this.pageSizeOpt = [25, 50, cnt]; 
-       },
-    });
+        next: (cnt) => {
+          this.dataSize = cnt;
+          this.pageSizeOpt = [25, 50, cnt]; 
+        },
+      });
     if (this.${snakeToCamel(tblName, false)}Service.savedFilter) {
       this.filter.pageIndex = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_index;
       this.filter.pageSize = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_size;
@@ -498,14 +502,18 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (sort) => {
-         this.filter.sortDirection = sort.direction;
-         this.filter.sortActive = sort.active;
-         this.paginator.pageIndex = 0; 
-        }
+          this.filter.sortDirection = sort.direction;
+          this.filter.sortActive = sort.active;
+          this.paginator.pageIndex = 0; 
+        },
       });
-
+    const arrEvents: Observable<any>[] = [];
+    Object.values(this.searchForm.controls).forEach((control) => {
+      arrEvents.push(control.valueChanges);
+    });
+    // fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
     merge(
-      fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
+      ...arrEvents,
     ).pipe(
       takeUntil(this.destroy$),
       debounceTime(150),
@@ -527,16 +535,19 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   load() {
     // Check if elements are initialized
-    if ((!this.search${capitalize(fieldArray[1].field)}Input) || (!this.sort)) {
+    if (!this.sort) {
       return;
     }
-    const filter = [];
-    if (this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value) {
-      filter.push({
-        field: '${fieldArray[1].field}',
-        value: \`\${this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value}%\`,
-      });
-    }
+    const filter: FilterItemDto[] = [];
+    Object.keys(this.searchForm.controls).forEach((key) => {
+      const control = this.searchForm.get(key);
+      const value = control?.value;
+      if (value && value !== '')
+        filter.push({
+          field: key,
+          value: value,
+        });
+    });
     const sort = [];
     if (this.filter.sortActive) {
       sort.push(this.filter.sortActive);
@@ -669,7 +680,7 @@ function generateListHtml(
     ts += '\n\n';
   });
 
-ts += `      <ng-container matColumnDef="actions" stickyEnd>
+  ts += `      <ng-container matColumnDef="actions" stickyEnd>
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let item" class="column-actions">
           <button mat-icon-button (click)="edit(item.${fieldArray[0].field})"><mat-icon>edit</mat-icon></button>
@@ -707,19 +718,19 @@ export function generateAngularModule(
   fieldArray: FieldDefinition[],
 ) {
   if (!fs.existsSync(path.join('dist', 'www'))) {
-    fs.mkdirSync(path.join('dist', 'www'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www'), { recursive: true });
   }
 
-  generateModule(schemaName,tblName);
+  generateModule(schemaName, tblName);
 
-  generateRouting(schemaName,tblName);
+  generateRouting(schemaName, tblName);
 
-  generateService(schemaName,tblName);
+  generateService(schemaName, tblName);
 
-  generateDataSource(schemaName,tblName);
+  generateDataSource(schemaName, tblName);
 
   if (!fs.existsSync(path.join('dist', 'www', 'edit'))) {
-    fs.mkdirSync(path.join('dist', 'www', 'edit'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www', 'edit'), { recursive: true });
   }
   generateEditTs(schemaName, tblName, fieldArray);
 
@@ -728,7 +739,7 @@ export function generateAngularModule(
   generateEditHtml(schemaName, tblName, fieldArray);
 
   if (!fs.existsSync(path.join('dist', 'www', 'list'))) {
-    fs.mkdirSync(path.join('dist', 'www', 'list'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www', 'list'), { recursive: true });
   }
 
   generateListScss();
