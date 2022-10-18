@@ -216,9 +216,10 @@ function generateEditTs(
   tblName: string,
   fieldArray: FieldDefinition[],
 ) {
-  let ts = `import { Component } from '@angular/core';
+  let ts = `import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject } from "rxjs";
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Dto } from '../../api';
@@ -229,8 +230,10 @@ import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.serv
   templateUrl: './edit.component.html',
   styleUrls: ['./edit.component.scss'],
 })
-export class EditComponent {
+export class EditComponent implements OnDestroy {
   form: FormGroup;
+  
+  private destroy$ = new Subject<void>();
 
   item: ${snakeToCamel(tblName)}Dto | undefined;
 
@@ -256,16 +259,24 @@ export class EditComponent {
   });
 ts += `    });
     this.route.params
-      .pipe(filter((params) => params.id))
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((params) => params.id)
+      )
       .subscribe((params) => {
         if (params.id.toString() === '0') { return; }
-        this.${snakeToCamel(tblName, false)}Service.view(params.id).subscribe(
-          (item) => {
+        this.${snakeToCamel(tblName, false)}Service.view(params.id).subscribe({
+          next: (item) => {
             this.item = item;
             this.form.patchValue(item);
           },
-        );
+        });
       });
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.unsubscribe();
   }
 
   save() {
@@ -277,14 +288,16 @@ ts += `    });
       this.alert.error('There is error on form.');
       return;
     }
-    this.${snakeToCamel(tblName, false)}Service.save(this.form.value).subscribe(
-      () => {
-        this.router.navigate(['/${tblName}/list']).then();
-      },
-      (error) => {
-        this.alert.error(error.error.message);
-      },
-    );
+    this.${snakeToCamel(tblName, false)}Service.save(this.form.value)
+       .pipe(takeUntil(this.destroy$))
+       .subscribe({
+          next: () => {
+            this.router.navigate(['/${tblName}/list']).then();
+          },
+          error: (error) => {
+            this.alert.error(error.error.message);
+          },
+        });
   }
 
   close() {
@@ -376,7 +389,7 @@ function generateListTs(
   fieldArray: FieldDefinition[],
 ) {
   let ts = `import {
-  AfterViewInit, Component, ElementRef, OnInit, ViewChild,
+  AfterViewInit, Component, ElementRef, OnInit, ViewChild, OnDestroy
 } from '@angular/core';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -401,8 +414,10 @@ import { ${snakeToCamel(tblName)}Datasource } from '../${snakeToDash(tblName)}.d
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss'],
 })
-export class ListComponent implements OnInit, AfterViewInit {
+export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   list: ${snakeToCamel(tblName)}Dto[] = [];
+  
+  private destroy$ = new Subject<void>();
 
   // TODO: Remove unnecessary columns, (leave actions)
   displayedColumns = [`;
@@ -454,7 +469,9 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
-    this.listTable.cntSubject.subscribe({
+    this.listTable.cntSubject
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
        next: (cnt) => {
         this.dataSize = cnt;
         this.pageSizeOpt = [25, 50, cnt]; 
@@ -470,19 +487,27 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
     this.listTable.load();
   }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.unsubscribe();
+  }
 
   ngAfterViewInit(): void {
-    this.sort.sortChange.subscribe({
-      next: (sort) => {
-       this.filter.sortDirection = sort.direction;
-       this.filter.sortActive = sort.active;
-       this.paginator.pageIndex = 0; 
-      }
-    });
+    this.sort.sortChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sort) => {
+         this.filter.sortDirection = sort.direction;
+         this.filter.sortActive = sort.active;
+         this.paginator.pageIndex = 0; 
+        }
+      });
 
     merge(
       fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
     ).pipe(
+      takeUntil(this.destroy$),
       debounceTime(150),
       distinctUntilChanged(),
       tap(() => {
@@ -495,6 +520,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.sort.sortChange,
       this.paginator.page,
     ).pipe(
+      takeUntil(this.destroy$),
       tap(() => this.load()),
     ).subscribe();
   }
@@ -531,7 +557,7 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   deleteDlg(row: ${snakeToCamel(tblName)}Dto) {
     const dlg = this.dialog.open(DeleteDialogComponent, { data: { title: \`\${row.${fieldArray[1].field}}\` } });
-    dlg.afterClosed().subscribe((result) => {
+    dlg.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (!result) { return; }
       this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe({
         next: () => {
