@@ -5,6 +5,7 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: [
+      'import',
       '@typescript-eslint/eslint-plugin',
   ],
   extends: [
@@ -18,7 +19,6 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js'],
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars-experimental": "error",
     "import/prefer-default-export": "off",
     "class-methods-use-this": "off"
   },

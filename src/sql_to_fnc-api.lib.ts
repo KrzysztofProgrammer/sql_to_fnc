@@ -70,14 +70,14 @@ export class FilterItemDto {
   })
   value: string;
 }`;
-  fs.writeFileSync(path.join('dist', 'api', 'dto', `FilterItem.dto.ts`), tsFilterDto);
+  fs.writeFileSync(path.join('dist', 'api', 'dto', 'FilterItem.dto.ts'), tsFilterDto);
 }
 
 /**
  * ListFilterRequest.dto  - NestJS global definition
  */
 function generateListFilterRequestDto() {
-  let tsItem =`import { ApiProperty } from '@nestjs/swagger';
+  let tsItem = `import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 import { FilterItemDto } from './FilterItem.dto';
 
@@ -130,7 +130,7 @@ export class ListFilterRequestDto {
   })
   page_size: number;
 }`;
-  fs.writeFileSync(path.join('dist', 'api', 'dto', `ListFilterRequest.dto.ts`), tsItem);
+  fs.writeFileSync(path.join('dist', 'api', 'dto', 'ListFilterRequest.dto.ts'), tsItem);
 }
 
 /**

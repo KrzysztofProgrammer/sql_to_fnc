@@ -3,7 +3,7 @@
 Project using DDL CREATE TABLE definition will generate:
 * PostgreSQL functions ``_delete``, ``_get``, ``_list``, ``_save`` . 
 * NestJS REST API with dto definition, service, controller template and basic E2E tests. 
-* WWW Angular module with: dto-s, service, routing, edit page and list page with pagination and basic filtering
+* WWW Angular module with: dto-s, service, routing, edit page and list page with pagination and basic filtering that is remembered
 
 
 Comments on table column is used for API description and labels for edits. 
@@ -14,16 +14,23 @@ Of course, this will not meet in 100% yours needs, but will speed up your develo
 
 *Linux usage:*
 ```
+npm run linux
+```
+or
+```
 ts-node sql_to_fnc.ts table.example.sql
 ```
 
 *Windows usage:*
 ```
+npm run win
+```
+or
+```
 ts-node-script .\sql_to_fnc.ts .\table.example.sql
 ```
 
 where **table.sql** is file with DDL table definition.
-
 
 ## Generation SQL
 

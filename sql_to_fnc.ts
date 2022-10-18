@@ -5,7 +5,7 @@ import { generateAPI } from './src/sql_to_fnc-api.lib';
 import { FieldDefinition } from './src/sql_to_fnc.interfaces';
 import { generateTestE2E } from './src/sql_to_fnc-test.lib';
 import { generateAngularModule } from './src/sql_to_fnc-www.lib';
-import { getDescription } from "./src/common";
+import { getDescription } from './src/common';
 
 const args = process.argv.slice(2);
 if (!args[0]) {
@@ -45,7 +45,7 @@ sqlFile.split('\n').forEach((line) => {
     tblName = elems[2].split('.')[1];
     return;
   }
-  if (['(', ')'].indexOf(elems[0].substr(0,1)) >= 0) {
+  if (['(', ')'].indexOf(elems[0].substr(0, 1)) >= 0) {
     return;
   }
   if (elems[0] === '') {

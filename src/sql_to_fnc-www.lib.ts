@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
-import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from "./common";
+import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from './common';
 import { datePlaceholder } from '../sql_to_fnc.constans';
 
 /**
@@ -108,6 +108,22 @@ export class ${snakeToCamel(tblName)}Service {
     const conf = new Configuration();
     this.api${snakeToCamel(tblName)}Service = new Api${snakeToCamel(tblName)}Service(this.httpClient, basePath, conf);
   }
+  
+  public savedFilter: ListFilterRequestDto = {
+    filter: [],
+    sort: [],
+    page_size: 25,
+    sort_direction: 'asc',
+    page_index: 0,
+  };
+
+  public getFilterValue(fieldName: string): string {
+    let result = this.savedFilter.filter?.find((item) => item.field === fieldName)?.value;
+    if ( !result ) {
+      result = '';
+    }
+    return result;
+  }
 
   public list(body: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
     return this.api${snakeToCamel(tblName)}Service.${snakeToCamel(tblName, false)}ControllerList(body);
@@ -161,9 +177,12 @@ export class ${snakeToCamel(tblName)}Datasource extends DataSource< ${snakeToCam
     super();
   }
 
-  load(filter: ListFilterRequestDto) {
+  load(filter?: ListFilterRequestDto) {
     this.loadingSubject.next(true);
-    this.${snakeToCamel(tblName, false)}Service.list(filter)
+    if (filter) {
+      this.${snakeToCamel(tblName, false)}Service.savedFilter = filter;
+    }
+    this.${snakeToCamel(tblName, false)}Service.list(this.${snakeToCamel(tblName, false)}Service.savedFilter)
       .pipe(
         catchError((err) => {
           this.alertService.clear();
@@ -205,9 +224,10 @@ function generateEditTs(
   tblName: string,
   fieldArray: FieldDefinition[],
 ) {
-  let ts = `import { Component } from '@angular/core';
+  let ts = `import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Dto } from '../../api';
@@ -218,8 +238,10 @@ import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.serv
   templateUrl: './edit.component.html',
   styleUrls: ['./edit.component.scss'],
 })
-export class EditComponent {
+export class EditComponent implements OnDestroy {
   form: FormGroup;
+  
+  private destroy$ = new Subject<void>();
 
   item: ${snakeToCamel(tblName)}Dto | undefined;
 
@@ -240,21 +262,29 @@ export class EditComponent {
     } else {
       ts += '\'\'';
     }
-    if (item.notNull) { ts += ', Validators.required'}
+    if (item.notNull) { ts += ', Validators.required';}
     ts += '],\n';
   });
-ts += `    });
+  ts += `    });
     this.route.params
-      .pipe(filter((params) => params.id))
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((params) => params.id),
+      )
       .subscribe((params) => {
         if (params.id.toString() === '0') { return; }
-        this.${snakeToCamel(tblName, false)}Service.view(params.id).subscribe(
-          (item) => {
+        this.${snakeToCamel(tblName, false)}Service.view(params.id).subscribe({
+          next: (item) => {
             this.item = item;
             this.form.patchValue(item);
           },
-        );
+        });
       });
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.unsubscribe();
   }
 
   save() {
@@ -266,14 +296,16 @@ ts += `    });
       this.alert.error('There is error on form.');
       return;
     }
-    this.${snakeToCamel(tblName, false)}Service.save(this.form.value).subscribe(
-      () => {
-        this.router.navigate(['/${tblName}/list']).then();
-      },
-      (error) => {
-        this.alert.error(error.error.message);
-      },
-    );
+    this.${snakeToCamel(tblName, false)}Service.save(this.form.value)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/${tblName}/list']).then();
+        },
+        error: (error) => {
+          this.alert.error(error.error.message);
+        },
+      });
   }
 
   close() {
@@ -365,18 +397,19 @@ function generateListTs(
   fieldArray: FieldDefinition[],
 ) {
   let ts = `import {
-  AfterViewInit, Component, ElementRef, OnInit, ViewChild,
+  AfterViewInit, Component, OnInit, ViewChild, OnDestroy
 } from '@angular/core';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, SortDirection } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { fromEvent, merge } from 'rxjs';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { merge, Subject, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, tap, takeUntil } from 'rxjs/operators';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { DeleteDialogComponent } from '../../shared/delete-dialog/delete-dialog.component';
 import { AlertService } from '../../shared/alert/alert.service';
 import { ${snakeToCamel(tblName)}Service } from '../${snakeToDash(tblName)}.service';
-import { ${snakeToCamel(tblName)}Dto } from '../../api';
+import { ${snakeToCamel(tblName)}Dto, FilterItemDto } from '../../api';
 import { ${snakeToCamel(tblName)}Datasource } from '../${snakeToDash(tblName)}.datasource';
 
 /**
@@ -389,13 +422,15 @@ import { ${snakeToCamel(tblName)}Datasource } from '../${snakeToDash(tblName)}.d
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss'],
 })
-export class ListComponent implements OnInit, AfterViewInit {
+export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   list: ${snakeToCamel(tblName)}Dto[] = [];
+  
+  private destroy$ = new Subject<void>();
 
   // TODO: Remove unnecessary columns, (leave actions)
   displayedColumns = [`;
   fieldArray.forEach((item) => {
-    ts += `'${item.field}', `
+    ts += `'${item.field}', `;
   });
   ts += ` 'actions'];
 
@@ -405,39 +440,82 @@ export class ListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
-  // @ts-ignore
-  @ViewChild('search${capitalize(fieldArray[1].field)}Input') search${capitalize(fieldArray[1].field)}Input: ElementRef;
+  
+  searchForm: FormGroup;
 
   dataSize: number = 0;
+  
+  pageSizeOpt: number[] = [25, 50, 100];
+  
+  public filter: {
+    pageSize: number;
+    pageIndex: number;
+    sortActive: string;
+    sortDirection: SortDirection;
+  } = {
+      pageSize: 25,
+      pageIndex: 0,
+      sortActive: '',
+      sortDirection: 'asc',
+    };
 
   constructor(
     private ${snakeToCamel(tblName, false)}Service: ${snakeToCamel(tblName)}Service,
     private router: Router,
     public dialog: MatDialog,
     private alertService: AlertService,
-  ) { }
-
-  ngOnInit(): void {
-    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
-    this.listTable.cntSubject.subscribe(
-      (cnt) => { this.dataSize = cnt; },
-    );
-    this.listTable.load({
-      filter: [],
-      sort: [],
-      page_size: 25,
-      sort_direction: 'asc',
-      page_index: 0,
+    private fb: FormBuilder,
+  ) {
+    this.searchForm = this.fb.group({
+      in${capitalize(fieldArray[1].field)}: [this.${snakeToCamel(tblName, false)}Service.getFilterValue('${fieldArray[1].field}')],
     });
   }
 
-  ngAfterViewInit(): void {
-    this.sort.sortChange.subscribe(() => { this.paginator.pageIndex = 0; });
+  ngOnInit(): void {
+    this.listTable = new ${snakeToCamel(tblName)}Datasource(this.${snakeToCamel(tblName, false)}Service, this.alertService);
+    this.listTable.cntSubject
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cnt) => {
+          this.dataSize = cnt;
+          this.pageSizeOpt = [25, 50, cnt]; 
+        },
+      });
+    if (this.${snakeToCamel(tblName, false)}Service.savedFilter) {
+      this.filter.pageIndex = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_index;
+      this.filter.pageSize = this.${snakeToCamel(tblName, false)}Service.savedFilter.page_size;
+      this.filter.sortDirection = this.${snakeToCamel(tblName, false)}Service.savedFilter.sort_direction;
+      if (this.${snakeToCamel(tblName, false)}Service.savedFilter.sort) {
+        this.filter.sortActive = this.${snakeToCamel(tblName, false)}Service.savedFilter.sort[0];
+      }
+    }
+    this.listTable.load();
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.unsubscribe();
+  }
 
+  ngAfterViewInit(): void {
+    this.sort.sortChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sort) => {
+          this.filter.sortDirection = sort.direction;
+          this.filter.sortActive = sort.active;
+          this.paginator.pageIndex = 0; 
+        },
+      });
+    const arrEvents: Observable<any>[] = [];
+    Object.values(this.searchForm.controls).forEach((control) => {
+      arrEvents.push(control.valueChanges);
+    });
+    // fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
     merge(
-      fromEvent(this.search${capitalize(fieldArray[1].field)}Input.nativeElement, 'keyup'),
+      ...arrEvents,
     ).pipe(
+      takeUntil(this.destroy$),
       debounceTime(150),
       distinctUntilChanged(),
       tap(() => {
@@ -450,25 +528,29 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.sort.sortChange,
       this.paginator.page,
     ).pipe(
+      takeUntil(this.destroy$),
       tap(() => this.load()),
     ).subscribe();
   }
 
   load() {
     // Check if elements are initialized
-    if ((!this.search${capitalize(fieldArray[1].field)}Input) || (!this.sort)) {
+    if (!this.sort) {
       return;
     }
-    const filter = [];
-    if (this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value) {
-      filter.push({
-        field: '${fieldArray[1].field}',
-        value: \`\${this.search${capitalize(fieldArray[1].field)}Input?.nativeElement.value}%\`,
-      });
-    }
+    const filter: FilterItemDto[] = [];
+    Object.keys(this.searchForm.controls).forEach((key) => {
+      const control = this.searchForm.get(key);
+      const value = control?.value;
+      if (value && value !== '')
+        filter.push({
+          field: key,
+          value: value,
+        });
+    });
     const sort = [];
-    if (this.sort.active) {
-      sort.push(this.sort.active);
+    if (this.filter.sortActive) {
+      sort.push(this.filter.sortActive);
     }
 
     this.listTable?.load({
@@ -476,7 +558,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       sort,
       page_index: this.paginator?.pageIndex,
       page_size: this.paginator?.pageSize,
-      sort_direction: this.sort?.direction,
+      sort_direction: this.filter.sortDirection,
     });
   }
 
@@ -486,7 +568,7 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   deleteDlg(row: ${snakeToCamel(tblName)}Dto) {
     const dlg = this.dialog.open(DeleteDialogComponent, { data: { title: \`\${row.${fieldArray[1].field}}\` } });
-    dlg.afterClosed().subscribe((result) => {
+    dlg.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (!result) { return; }
       this.${snakeToCamel(tblName, false)}Service.delete(parseInt(row.${fieldArray[0].field})).subscribe({
         next: () => {
@@ -555,7 +637,8 @@ function generateListHtml(
 ) {
   let ts = `<mat-card class="mat-elevation-z4">
   <mat-card-content>
-    <div class="flex-container">
+    <form [formGroup]="searchForm">
+      <div class="flex-container">
       <div>
         List
       </div>
@@ -565,11 +648,12 @@ function generateListHtml(
           Add
         </button>
         <mat-form-field class="header-item">
-          <mat-label>Search</mat-label>
-          <input matInput placeholder="Search field" #search${capitalize(fieldArray[1].field)}Input>
+          <mat-label>Search ${fieldArray[1].field}</mat-label>
+          <input matInput placeholder="Search field" formControlName="in${capitalize(fieldArray[1].field)}">
         </mat-form-field>
       </div>
     </div>
+    </form>
   </mat-card-content>
 </mat-card>
 
@@ -596,7 +680,7 @@ function generateListHtml(
     ts += '\n\n';
   });
 
-ts += `      <ng-container matColumnDef="actions" stickyEnd>
+  ts += `      <ng-container matColumnDef="actions" stickyEnd>
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let item" class="column-actions">
           <button mat-icon-button (click)="edit(item.${fieldArray[0].field})"><mat-icon>edit</mat-icon></button>
@@ -614,8 +698,9 @@ ts += `      <ng-container matColumnDef="actions" stickyEnd>
     </table>
 
     <mat-paginator
-      [pageSizeOptions]="[25, 50]"
-      [pageSize]="25"
+      [pageSizeOptions]="pageSizeOpt"
+      [pageSize]="filter.pageSize"
+      [pageIndex]="filter.pageIndex"
       [length]="dataSize"
       showFirstLastButtons
       aria-label="Choose page">
@@ -633,19 +718,19 @@ export function generateAngularModule(
   fieldArray: FieldDefinition[],
 ) {
   if (!fs.existsSync(path.join('dist', 'www'))) {
-    fs.mkdirSync(path.join('dist', 'www'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www'), { recursive: true });
   }
 
-  generateModule(schemaName,tblName);
+  generateModule(schemaName, tblName);
 
-  generateRouting(schemaName,tblName);
+  generateRouting(schemaName, tblName);
 
-  generateService(schemaName,tblName);
+  generateService(schemaName, tblName);
 
-  generateDataSource(schemaName,tblName);
+  generateDataSource(schemaName, tblName);
 
   if (!fs.existsSync(path.join('dist', 'www', 'edit'))) {
-    fs.mkdirSync(path.join('dist', 'www', 'edit'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www', 'edit'), { recursive: true });
   }
   generateEditTs(schemaName, tblName, fieldArray);
 
@@ -654,7 +739,7 @@ export function generateAngularModule(
   generateEditHtml(schemaName, tblName, fieldArray);
 
   if (!fs.existsSync(path.join('dist', 'www', 'list'))) {
-    fs.mkdirSync(path.join('dist', 'www', 'list'), {recursive: true});
+    fs.mkdirSync(path.join('dist', 'www', 'list'), { recursive: true });
   }
 
   generateListScss();
