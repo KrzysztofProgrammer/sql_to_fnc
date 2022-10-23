@@ -544,7 +544,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       const value = control?.value;
       if (value && value !== '')
         filter.push({
-          field: key,
+          field: key.toLowerCase().substring(2),
           value: value,
         });
     });
