@@ -57,7 +57,10 @@ function generateGet(
   /**
    *     GET
    */
-  const getFncName = `${schemaName}.${tblName}_get`;
+  let getFncName = `fnc_${schemaName}.${tblName}_get`;
+  if (schemaName === 'public') {
+    getFncName = `fnc_${tblName}_get`;
+  }
   const sqlGet = `${header}
 CREATE OR REPLACE FUNCTION ${getFncName}(a_id integer)
   RETURNS TEXT AS
@@ -77,7 +80,7 @@ COMMENT ON FUNCTION ${getFncName}(integer) IS 'Get ${tblName}';
 ALTER FUNCTION ${getFncName}(integer) OWNER TO ${privOwner};
 GRANT EXECUTE ON FUNCTION ${getFncName}(integer) TO ${privUser};
 `;
-  fs.writeFileSync(path.join('dist', 'sql', `fnc_${getFncName}.sql`), sqlGet);
+  fs.writeFileSync(path.join('dist', 'sql', `${getFncName}.sql`), sqlGet);
 }
 
 function generateDelete(
@@ -89,7 +92,10 @@ function generateDelete(
   /**
    *    DELETE
    */
-  const delFncName = `${schemaName}.${tblName}_delete`;
+  let delFncName = `fnc_${schemaName}.${tblName}_delete`;
+  if (schemaName === 'public') {
+    delFncName = `fnc_${tblName}_delete`;
+  }
   const sqlDelete = `${header}
 CREATE OR REPLACE FUNCTION ${delFncName}( a_id integer )
   RETURNS TEXT AS
@@ -111,7 +117,7 @@ LANGUAGE plpgsql VOLATILE
                    COST 100;
 ALTER FUNCTION ${delFncName}(integer) OWNER TO ${privOwner};
 GRANT EXECUTE ON FUNCTION ${delFncName}(integer) TO ${privUser};`;
-  fs.writeFileSync(path.join('dist', 'sql', `fnc_${delFncName}.sql`), sqlDelete);
+  fs.writeFileSync(path.join('dist', 'sql', `${delFncName}.sql`), sqlDelete);
 }
 
 function generateList(
@@ -124,7 +130,10 @@ function generateList(
   /**
    *    LIST
    */
-  const listFncName = `${schemaName}.${tblName}_list`;
+  let listFncName = `fnc_${schemaName}.${tblName}_list`;
+  if (schemaName === 'public') {
+    listFncName = `fnc_${tblName}_list`;
+  }
   const sqlList = `${header}
 CREATE OR  REPLACE FUNCTION ${listFncName}(a_filter character varying)
   RETURNS TEXT AS
@@ -214,7 +223,7 @@ COMMENT ON FUNCTION ${listFncName}(character varying) IS 'List';
 ALTER FUNCTION ${listFncName}(character varying) OWNER TO ${privOwner};
 GRANT EXECUTE ON FUNCTION ${listFncName}(character varying) TO ${privUser};
 `;
-  fs.writeFileSync(path.join('dist', 'sql', `fnc_${listFncName}.sql`), sqlList);
+  fs.writeFileSync(path.join('dist', 'sql', `${listFncName}.sql`), sqlList);
 }
 
 function generateSave(
@@ -227,7 +236,10 @@ function generateSave(
   /**
    *       SAVE
    */
-  const saveFncName = `${schemaName}.${tblName}_save`;
+  let saveFncName = `fnc_${schemaName}.${tblName}_save`;
+  if (schemaName === 'public') {
+    saveFncName = `fnc_${tblName}_save`;
+  }
   let sqlSave = `${header}
 CREATE OR REPLACE FUNCTION ${saveFncName}( a_data character varying )
     RETURNS text AS
@@ -278,7 +290,7 @@ $BODY$
 ALTER FUNCTION ${saveFncName}(character varying) OWNER TO ${privOwner};
 GRANT EXECUTE ON FUNCTION ${saveFncName}(character varying) TO ${privUser};
 `;
-  fs.writeFileSync(path.join('dist', 'sql', `fnc_${saveFncName}.sql`), sqlSave);
+  fs.writeFileSync(path.join('dist', 'sql', `${saveFncName}.sql`), sqlSave);
 }
 
 export function generateSQL(
