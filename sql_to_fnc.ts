@@ -41,8 +41,13 @@ sqlFile.split('\n').forEach((line) => {
     return;
   }
   if (elems[0].toUpperCase() === 'CREATE') {
-    schemaName = elems[2].split('.')[0];
-    tblName = elems[2].split('.')[1];
+    if (!elems[2].split('.')[1]) {
+      schemaName = 'public';
+      tblName = elems[2].split('.')[0];
+    } else {
+      schemaName = elems[2].split('.')[0];
+      tblName = elems[2].split('.')[1];
+    }
     return;
   }
   if (['(', ')'].indexOf(elems[0].substr(0, 1)) >= 0) {

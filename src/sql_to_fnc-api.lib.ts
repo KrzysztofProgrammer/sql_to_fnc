@@ -331,6 +331,30 @@ export class ${snakeToCamel(tblName)}Service {
   fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), `${snakeToDash(tblName)}.service.ts`), tsService);
 }
 
+/**
+ * Module
+ */
+function generateModule(
+  schemaName: string,
+  tblName: string,
+) {
+  let tsModule = `import { Module } from '@nestjs/common';
+import { SharedModule } from '../../shared/shared.module';
+import { ${snakeToCamel(tblName)}Service } from './${snakeToDash(tblName)}.service';
+import { ${snakeToCamel(tblName)}Controller } from './${snakeToDash(tblName)}.controller';
+
+@Module({
+  imports: [SharedModule],
+  providers: [${snakeToCamel(tblName)}Service],
+  exports: [${snakeToCamel(tblName)}Service],
+  controllers: [${snakeToCamel(tblName)}Controller],
+})
+export class ${snakeToCamel(tblName)}Module {}
+`;
+
+  fs.writeFileSync(path.join('dist', 'api', snakeToDash(tblName), `${snakeToDash(tblName)}.module.ts`), tsModule);
+}
+
 export function generateAPI(
   schemaName: string,
   tblName: string,
@@ -355,4 +379,6 @@ export function generateAPI(
   generateController(schemaName, tblName);
 
   generateService(schemaName, tblName);
+
+  generateModule(schemaName, tblName);
 }
