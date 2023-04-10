@@ -44,6 +44,7 @@ CREATE TABLE auth.user
   password           varchar    NOT NULL,
   notes              varchar
 );
+COMMENT ON TABLE auth.user IS 'Example table';
 COMMENT ON COLUMN auth.user.login IS 'Login, minimum 3 letters';
 COMMENT ON COLUMN auth.user.active IS 'Is account active?';
 COMMENT ON COLUMN auth.user.password IS 'Please use minimum 8 letters, upper and lower case, number';

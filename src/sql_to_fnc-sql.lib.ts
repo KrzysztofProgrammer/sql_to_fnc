@@ -57,9 +57,9 @@ function generateGet(
   /**
    *     GET
    */
-  let getFncName = `fnc_${schemaName}.${tblName}_get`;
+  let getFncName = `${schemaName}.${tblName}_get`;
   if (schemaName === 'public') {
-    getFncName = `fnc_${tblName}_get`;
+    getFncName = `${tblName}_get`;
   }
   const sqlGet = `${header}
 CREATE OR REPLACE FUNCTION ${getFncName}(a_id integer)
@@ -92,9 +92,9 @@ function generateDelete(
   /**
    *    DELETE
    */
-  let delFncName = `fnc_${schemaName}.${tblName}_delete`;
+  let delFncName = `${schemaName}.${tblName}_delete`;
   if (schemaName === 'public') {
-    delFncName = `fnc_${tblName}_delete`;
+    delFncName = `${tblName}_delete`;
   }
   const sqlDelete = `${header}
 CREATE OR REPLACE FUNCTION ${delFncName}( a_id integer )
@@ -130,9 +130,9 @@ function generateList(
   /**
    *    LIST
    */
-  let listFncName = `fnc_${schemaName}.${tblName}_list`;
+  let listFncName = `${schemaName}.${tblName}_list`;
   if (schemaName === 'public') {
-    listFncName = `fnc_${tblName}_list`;
+    listFncName = `${tblName}_list`;
   }
   const sqlList = `${header}
 CREATE OR  REPLACE FUNCTION ${listFncName}(a_filter character varying)
@@ -236,9 +236,9 @@ function generateSave(
   /**
    *       SAVE
    */
-  let saveFncName = `fnc_${schemaName}.${tblName}_save`;
+  let saveFncName = `${schemaName}.${tblName}_save`;
   if (schemaName === 'public') {
-    saveFncName = `fnc_${tblName}_save`;
+    saveFncName = `${tblName}_save`;
   }
   let sqlSave = `${header}
 CREATE OR REPLACE FUNCTION ${saveFncName}( a_data character varying )
