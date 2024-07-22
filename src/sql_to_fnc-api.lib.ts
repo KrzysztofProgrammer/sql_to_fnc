@@ -44,6 +44,31 @@ export class ${dtoName} {\n`;
 }
 
 /**
+ * Error.dto.ts - NestJS global error response definition
+ */
+function generateErrorDto() {
+  let tsErrorDto = `import { ApiProperty } from '@nestjs/swagger';
+
+export class ErrorResponseDto {
+  @ApiProperty({
+    description: 'Information about error',
+    type: 'string',
+    example: 'Login or password invalid',
+  })
+  error: string;
+
+  @ApiProperty({
+    description: 'HTTP error response code',
+    type: 'number',
+    example: 404,
+  })
+  code: number;
+}`;
+  fs.writeFileSync(path.join('dist', 'api', 'dto', 'ErrorResponse.dto.ts'), tsErrorDto);
+}
+
+
+/**
  * FilterItem.dto.ts - NestJS global definition
  */
 function generateFilterItemDto() {
@@ -89,7 +114,7 @@ export class ListFilterRequestDto {
     required: false,
   })
   filter: FilterItemDto[];
-  
+
   @IsString()
   @ApiProperty({
     description: 'Sort direction',
@@ -98,7 +123,7 @@ export class ListFilterRequestDto {
     example: 'asc',
   })
   sort_direction: string;
-  
+
   @IsArray()
   @IsOptional()
   @ApiProperty({
@@ -111,7 +136,7 @@ export class ListFilterRequestDto {
     required: false,
   })
   sort?: string[];
-  
+
   @IsNotEmpty()
   @IsNumber()
   @ApiProperty({
@@ -120,7 +145,7 @@ export class ListFilterRequestDto {
     example: 1,
   })
   page_index: number;
-  
+
   @IsNumber()
   @ApiProperty({
     description: 'Page size. If empty, all items are returned.',
@@ -192,8 +217,8 @@ export class ${snakeToCamel(tblName)}Controller {
 
   @Post('list')
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error', type: ErrorResponseDto })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with list', type: ${snakeToCamel(tblName)}ListResponseDto })
   list(@Body() filter: ListFilterRequestDto): Observable< ${snakeToCamel(tblName)}ListResponseDto > {
@@ -202,9 +227,10 @@ export class ${snakeToCamel(tblName)}Controller {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error', type: ErrorResponseDto })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response description', type: ${snakeToCamel(tblName)}Dto })
   get(@Param('id') id: number): Observable< ${snakeToCamel(tblName)}Dto > {
     return this.${snakeToCamel(tblName, false)}Service.get(id);
@@ -212,10 +238,10 @@ export class ${snakeToCamel(tblName)}Controller {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error', type: ErrorResponseDto })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.OK, description: 'Response with id' })
   save(@Body() ${snakeToCamel(tblName, false)}: ${capitalize(snakeToCamel(tblName))}Dto) {
     return this.${snakeToCamel(tblName, false)}Service.save(${snakeToCamel(tblName, false)});
@@ -223,10 +249,10 @@ export class ${snakeToCamel(tblName)}Controller {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error' })
-  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database error', type: ErrorResponseDto })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Invalid credentials', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.TOO_MANY_REQUESTS, description: 'Too many requests' })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Item not found', type: ErrorResponseDto })
   @ApiResponse({ status: HttpStatus.OK, description: 'Deleted' })
   delete(@Param('id') id: number) {
     return this.${snakeToCamel(tblName, false)}Service.delete(id);
@@ -370,6 +396,8 @@ export function generateAPI(
   generateModelDto(schemaName, tblName, fieldArray);
 
   generateFilterItemDto();
+
+  generateErrorDto();
 
   generateListFilterRequestDto();
 
