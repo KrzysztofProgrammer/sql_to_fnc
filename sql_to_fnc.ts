@@ -6,7 +6,9 @@ import { FieldDefinition } from './src/sql_to_fnc.interfaces';
 import { generateTestE2E } from './src/sql_to_fnc-test.lib';
 import { generateAngularModule } from './src/sql_to_fnc-www.lib';
 import { getDescription } from './src/common';
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 const args = process.argv.slice(2);
 if (!args[0]) {
   console.log('Add SQL file with table definition');

@@ -10,7 +10,10 @@ Comments on table column is used for API description and labels for edits.
 Of course, this will not meet in 100% yours needs, but will speed up your development time.
 
 ## Usage
-! Important ! Before usage please change inside sql_to_fnc.constants.ts database username.
+! Important !
+Before use please change inside .env username and group name that will be used in generated SQL files.
+* SQL_USER="example_user"
+* SQL_OWNER="example_owner"
 
 *Linux usage:*
 ```
@@ -76,7 +79,7 @@ It will generate files:
 * dist/api/dto/FilterItem.dto.ts - global definition for filter item, used in ListFilterRequest 
 * dist/api/dto/ListFilterRequest.dto.ts - global definition request for list api
 * dist/api/customer/dto/User.dto.ts  - with type definition for user
-* dist/api/customer/dto/UserFilter.dto.ts - list filter. Example: ```{"filter": [{"field": "login", "value": "Joh%"}], "sort": ["login"], "page_size": 25, "page_index": 1, "sort_direction": "asc"}```
+* dist/api/customer/dto/UserFilter.dto.ts - list filter. Example: ```{"filter": [{"field": "login", "value": "Joh%"}], "sort": ["login"], "page_size": 25, "page_index": 1, "sort_direction": "asc"}``` or empty to return all records ```{}```
 * dist/api/customer/dto/UserListResponse.dto.ts  - response from list function with table count information and data array - filtered user table
 * dist/api/customer/user.controller.ts - with API endpoints: POST /list, GET :id, POST /, DELETE :id
 * dist/api/customer/user.service.ts - with methods covering controller above definitions: list, save, get, delete. All methods call SQL functions.

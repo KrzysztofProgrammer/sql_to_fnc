@@ -1,6 +1,11 @@
 # Changelog 
 SQL to Function, CRUD generator for NestJS
 
+## Version 0.7.4 _2024-07-06_
+* Move sql_to_fnc.constans.ts into .env file for better understanding configuration 
+* Support null page_size in list method it will give all records
+* Nice handle exception in SQL list method if filter is not in JSON format
+
 ## Version 0.7.3 _2022-10-18_
 * Filter on list page will be remembered
 * Pagination have on last position length value of table

@@ -2,8 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { FieldDefinition } from './sql_to_fnc.interfaces';
 import { capitalize, isNumber, isBoolean, isDate, snakeToCamel, snakeToDash } from './common';
-import { datePlaceholder } from '../sql_to_fnc.constans';
+import * as dotenv from 'dotenv';
 
+dotenv.config();
+const datePlaceholder = process.env.DATE_PLACEHOLDER;
 /**
  * Module
  */

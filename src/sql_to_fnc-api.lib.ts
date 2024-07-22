@@ -121,14 +121,13 @@ export class ListFilterRequestDto {
   })
   page_index: number;
   
-  @IsNotEmpty()
   @IsNumber()
   @ApiProperty({
-    description: 'Page size',
+    description: 'Page size. If empty, all items are returned.',
     type: 'number',
     example: 25,
   })
-  page_size: number;
+  page_size?: number;
 }`;
   fs.writeFileSync(path.join('dist', 'api', 'dto', 'ListFilterRequest.dto.ts'), tsItem);
 }
