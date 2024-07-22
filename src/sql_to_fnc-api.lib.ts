@@ -203,6 +203,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ${snakeToCamel(tblName)}Dto } from './dto/${snakeToCamel(tblName)}.dto';
 import { ${snakeToCamel(tblName)}ListResponseDto } from './dto/${snakeToCamel(tblName)}ListResponse.dto';
 import { ListFilterRequestDto } from '../dto/ListFilterRequest.dto';
+import { ErrorResponseDto } from '../dto/ErrorResponse.dto';
 import { ${snakeToCamel(tblName)}Service } from './${snakeToDash(tblName)}.service';
 
 @ApiTags('${tblName}')
